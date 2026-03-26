@@ -22,7 +22,11 @@ from whatsapp_agent import sende_tipps, sende_wochen_stats
     
 
 scheduler = AsyncIOScheduler(timezone="Europe/Vienna")
-
+_cache = {
+    "analyse_laeuft": False,
+    "letzter_lauf": "Noch nie",
+    "alle_empfehlungen": []
+}
 
 # ── Hauptanalyse täglich 21:00 ────────────────────────────────────────────────
 async def abend_analyse():
