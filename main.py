@@ -11,19 +11,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from agents.odds_agent import get_parsed_odds
-from agents.analysis_agent import analysiere_spiele, generiere_wochen_analyse, generiere_monats_analyse
-from agents.excel_agent import (
-    erstelle_excel, empfehlungen_hinzufuegen, top3_als_wetten_eintragen,
-    analyse_eintragen, get_statistik, get_kapital, EXCEL_PATH
-)
-from agents.gdrive_agent import excel_zu_drive_hochladen
-from agents.whatsapp_agent import sende_tipps, sende_wochen_stats
+from odds_agent import get_parsed_odds
+from analysis_agent import analysiere_spiele, generiere_wochen_analyse, generiere_monats_analyse
+from excel_agent import erstelle_excel, empfehlungen_hinzufuegen, top3_als_wetten_eintragen, analyse_eintragen, get_statistik, get_kapital, EXCEL_PATH
 
-_cache = {
-    "datum": None, "alle_empfehlungen": [], "top3": [],
-    "zusammenfassung": "", "letzter_lauf": None, "analyse_laeuft": False,
-}
+
+
+from gdrive_agent import excel_zu_drive_hochladen
+from whatsapp_agent import sende_tipps, sende_wochen_stats
+    
 
 scheduler = AsyncIOScheduler(timezone="Europe/Vienna")
 
@@ -123,7 +119,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Sportwetten KI Multi-Agent", lifespan=lifespan)
-static_dir = Path(__file__).parent / "static"
+static_dir = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
