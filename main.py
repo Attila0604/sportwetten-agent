@@ -161,14 +161,14 @@ async def drive_upload(bg: BackgroundTasks):
 
 @app.post("/api/whatsapp-test")
 async def whatsapp_test():
-       from whatsapp_agent import sende_whatsapp
-        ok = await sende_whatsapp("✅ *Test erfolgreich!*\nDein Sportwetten KI Agent ist aktiv! ⚽🤖")
-        return {"success": ok, "message": "✅ Gesendet!" if ok else "❌ Fehler — API Key prüfen"}
+    from whatsapp_agent import sende_whatsapp
+    ok = await sende_whatsapp("✅ *Test erfolgreich!*\nDein Sportwetten KI Agent ist aktiv! ⚽🤖")
+    return {"success": ok, "message": "✅ Gesendet!" if ok else "❌ Fehler - API Key prüfen"}
 
 @app.get("/api/status")
 async def status():
-        from whatsapp_agent import WHATSAPP_PHONE, WHATSAPP_API_KEY
-        return {
+    from whatsapp_agent import WHATSAPP_PHONE, WHATSAPP_API_KEY
+    return {
         "status": "online", "version": "2.1.0",
         "uhrzeit": datetime.now().strftime("%d.%m.%Y %H:%M"),
         "analyse_laeuft": _cache["analyse_laeuft"],
