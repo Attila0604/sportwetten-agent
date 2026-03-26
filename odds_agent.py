@@ -15,6 +15,10 @@ SOCCER_SPORTS = [
     "soccer_france_ligue_one",
     "soccer_uefa_champs_league",
     "soccer_austria_bundesliga",
+    # NEU: Diese Ligen spielen auch während der Länderspielpause!
+    "soccer_fifa_world_cup_qualifiers",
+    "soccer_friendly_international",
+    "soccer_germany_bundesliga2"
 ]
 
 async def fetch_odds_for_sport(client: httpx.AsyncClient, sport: str) -> list:
@@ -24,10 +28,10 @@ async def fetch_odds_for_sport(client: httpx.AsyncClient, sport: str) -> list:
             f"{BASE_URL}/sports/{sport}/odds/",
             params={
                 "apiKey": ODDS_API_KEY,
-                "regions": "eu",
+                "regions": "eu", # Wir suchen im ganzen EU-Raum
                 "markets": "h2h",
                 "oddsFormat": "decimal",
-                "bookmakers": "bet365",
+                # Den strikten Bet365-Filter haben wir entfernt, um mehr Daten zu bekommen
             },
             timeout=15,
         )
@@ -38,7 +42,7 @@ async def fetch_odds_for_sport(client: httpx.AsyncClient, sport: str) -> list:
         return []
 
 async def fetch_all_football_odds() -> list:
-    """Holt alle Fußball-Quoten von Bet365"""
+    """Holt alle Fußball-Quoten"""
     all_games = []
     async with httpx.AsyncClient() as client:
         for sport in SOCCER_SPORTS:
@@ -67,18 +71,25 @@ async def fetch_results(sport: str) -> list:
     return []
 
 def parse_game(game: dict) -> dict:
-    """Extrahiert die relevanten Daten eines Spiels"""
-    bet365_odds = None
-    for bookmaker in game.get("bookmakers", []):
-        if bookmaker["key"] == "bet365":
-            for market in bookmaker.get("markets", []):
-                if market["key"] == "h2h":
-                    outcomes = {o["name"]: o["price"] for o in market["outcomes"]}
-                    bet365_odds = outcomes
-                    break
+    """Extrahiert die relevanten Daten eines Spiels, flexibel bei Buchmachern"""
+    bookmakers = game.get("bookmakers", [])
+    
+    # Wenn gar kein Buchmacher Quoten hat, überspringen
+    if not bookmakers:
+        return None
+
+    # Versuch 1: Wir suchen Bet365. 
+    # Versuch 2: Wenn Bet365 nicht da ist, nehmen wir einfach den allerersten Buchmacher in der Liste!
+    target_bookie = next((b for b in bookmakers if b["key"] == "bet365"), bookmakers[0])
+    
+    odds_data = None
+    for market in target_bookie.get("markets", []):
+        if market["key"] == "h2h":
+            outcomes = {o["name"]: o["price"] for o in market["outcomes"]}
+            odds_data = outcomes
             break
 
-    if not bet365_odds:
+    if not odds_data:
         return None
 
     home_team = game.get("home_team", "")
@@ -97,13 +108,13 @@ def parse_game(game: dict) -> dict:
         "heim": home_team,
         "gast": away_team,
         "zeit": spiel_zeit,
-        "quote_heim": bet365_odds.get(home_team, 0),
-        "quote_unentschieden": bet365_odds.get("Draw", 0),
-        "quote_gast": bet365_odds.get(away_team, 0),
+        "quote_heim": odds_data.get(home_team, 0),
+        "quote_unentschieden": odds_data.get("Draw", 0),
+        "quote_gast": odds_data.get(away_team, 0),
     }
 
 async def get_parsed_odds() -> list:
-    """Gibt alle geparsten Spiele mit Bet365-Quoten zurück"""
+    """Gibt alle geparsten Spiele mit Quoten zurück"""
     raw = await fetch_all_football_odds()
     parsed = []
     for game in raw:
