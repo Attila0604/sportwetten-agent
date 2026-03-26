@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<title>⚽ Sportwetten KI</title>
+<style>
+:root {
+  --bg: #0d1117; --card: #161b22; --card2: #1c2330;
+  --border: #30363d; --text: #e6edf3; --muted: #8b949e;
+  --green: #2ecc71; --red: #e74c3c; --blue: #1a8fe3;
+  --gold: #f1c40f; --navy: #1a252f; --white: #ffffff;
+  --hellgrau: #f0f2f5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#0d1117,#1a252f);border-bottom:2px solid var(--blue);padding:12px 16px 8px;position:sticky;top:0;z-index:100}
+.h-row1{display:flex;align-items:center;justify-content:space-between}
+.h-title{font-size:17px;font-weight:800;color:var(--text)}
+.h-title span{color:var(--blue)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:5px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.h-row2{display:flex;align-items:center;gap:14px;margin-top:5px;font-size:11px;color:var(--muted)}
+.kapital-badge{background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.3);color:var(--green);padding:2px 10px;border-radius:20px;font-weight:700;font-size:12px}
+
+/* NAV */
+nav{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:70px;padding:11px 6px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* MAIN */
+main{padding:12px 12px 80px;max-width:960px;margin:0 auto}
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+
+/* KAPITAL BANNER */
+.kapital-banner{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:600px){.kapital-banner{grid-template-columns:repeat(4,1fr)}}
+.kp-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center}
+.kp-val{font-size:20px;font-weight:800;margin-bottom:3px}
+.kp-lbl{font-size:10px;color:var(--muted);font-weight:600}
+
+/* WETTE CARD */
+.wette-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue);transition:transform .15s}
+.wette-card:hover{transform:translateX(2px)}
+.wette-card.top3-card{border-left-color:var(--gold);background:linear-gradient(135deg,rgba(241,196,15,.05),var(--card2))}
+.wette-card.niedrig{border-left-color:var(--green)}
+.wette-card.hoch{border-left-color:var(--red)}
+
+.wh{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.wt{font-size:15px;font-weight:700}
+.wl{font-size:11px;color:var(--muted);margin-top:2px}
+.wq{font-size:24px;font-weight:900;color:var(--blue);white-space:nowrap}
+
+.wdet{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+@media(min-width:500px){.wdet{grid-template-columns:repeat(5,1fr)}}
+.di{text-align:center}
+.dl{font-size:10px;color:var(--muted)}
+.dv{font-size:13px;font-weight:700;margin-top:2px}
+
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:5px}
+.bg{background:rgba(46,204,113,.2);color:var(--green)}
+.br{background:rgba(231,76,60,.2);color:var(--red)}
+.by{background:rgba(241,196,15,.2);color:var(--gold)}
+.bb{background:rgba(26,143,227,.2);color:var(--blue)}
+.bgold{background:rgba(241,196,15,.25);color:var(--gold);border:1px solid rgba(241,196,15,.4)}
+
+.einsatz-box{background:rgba(26,143,227,.1);border:1px solid rgba(26,143,227,.25);border-radius:8px;padding:10px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.eb-item{text-align:center}
+.eb-lbl{font-size:10px;color:var(--muted)}
+.eb-val{font-size:14px;font-weight:800;margin-top:2px}
+
+.begr{font-size:12px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.03);border-radius:6px;line-height:1.5}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-p{background:var(--blue);color:#fff}
+.btn-p:hover{background:#1a7fd4}
+.btn-s{background:var(--green);color:#fff}
+.btn-o{background:transparent;color:var(--blue);border:1px solid var(--blue)}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:6px 12px;font-size:11px}
+
+/* ANALYSE BAR */
+.abar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.ainfo{font-size:12px;color:var(--muted)}
+
+/* ZUSAMMENFASSUNG */
+.zs{background:linear-gradient(135deg,rgba(26,143,227,.08),rgba(46,204,113,.08));border:1px solid rgba(26,143,227,.25);border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.6}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EMPTY */
+.empty{text-align:center;padding:45px 20px;color:var(--muted)}
+.empty .icon{font-size:48px;margin-bottom:12px}
+
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--card2);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:10px 8px;text-align:left;font-weight:700;border-bottom:1px solid var(--border)}
+td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* FORM */
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.fi{width:100%;padding:10px 12px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px}
+.fi:focus{outline:none;border-color:var(--blue)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;display:none;min-width:220px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.toast.show{display:block;animation:fiu .3s}
+@keyframes fiu{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ANALYSE TEXT */
+.analyse-text{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;background:rgba(255,255,255,.02);padding:12px;border-radius:8px;border:1px solid var(--border)}
+
+/* DRIVE STATUS */
+.drive-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.drive-ok{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.3)}
+.drive-no{background:rgba(231,76,60,.15);color:var(--red);border:1px solid rgba(231,76,60,.3)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-row1">
+    <div class="h-title">⚽ <span>Sportwetten</span> KI Agent</div>
+    <div style="font-size:11px;color:var(--muted)">
+      <span class="dot"></span><span id="htime">–</span>
+    </div>
+  </div>
+  <div class="h-row2">
+    <span>💰 Kapital: <span class="kapital-badge" id="h-kapital">–</span></span>
+    <span>🎯 Max/Wette: <span id="h-max">–</span></span>
+    <span>📅 <span id="h-datum">–</span></span>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="showPage('heute',this)">🎯 Heute</button>
+  <button class="tab" onclick="showPage('top3',this)">⭐ Top 3</button>
+  <button class="tab" onclick="showPage('statistik',this)">📊 Statistik</button>
+  <button class="tab" onclick="showPage('verlauf',this)">📋 Verlauf</button>
+  <button class="tab" onclick="showPage('analyse',this)">📈 Analysen</button>
+  <button class="tab" onclick="showPage('excel',this)">📥 Drive</button>
+</nav>
+
+<main>
+
+<!-- ── HEUTE ─────────────────────────────────────────── -->
+<div class="page active" id="page-heute">
+  <div class="abar">
+    <div class="ainfo" id="letzter-lauf">🌙 Täglich 23:00 Uhr automatisch</div>
+    <button class="btn btn-p" onclick="analyseStarten()" id="btn-analyse">🔍 Analysieren</button>
+  </div>
+  <div id="zs-box"></div>
+  <div id="alle-empf">
+    <div class="loading"><div class="spinner"></div>Lade Empfehlungen...</div>
+  </div>
+</div>
+
+<!-- ── TOP 3 ──────────────────────────────────────────── -->
+<div class="page" id="page-top3">
+  <div class="card" style="background:linear-gradient(135deg,rgba(241,196,15,.08),var(--card));border-color:rgba(241,196,15,.3)">
+    <div class="card-title">⭐ TOP 3 — Heute automatisch eingetragen</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+      Diese 3 Wetten wurden von der KI ausgewählt und automatisch in deine Excel-Tabelle eingetragen.
+      Einsatz nach halbem Kelly-Kriterium (max. 3% des Kapitals).
+    </p>
+    <div id="top3-liste">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STATISTIK ──────────────────────────────────────── -->
+<div class="page" id="page-statistik">
+  <div class="kapital-banner" id="kp-banner">
+    <div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div>
+  </div>
+  <div id="stats-detail"></div>
+</div>
+
+<!-- ── VERLAUF ────────────────────────────────────────── -->
+<div class="page" id="page-verlauf">
+  <div class="card">
+    <div class="card-title">📋 Letzte Wetten</div>
+    <div class="tw" id="verlauf-table">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ANALYSEN ───────────────────────────────────────── -->
+<div class="page" id="page-analyse">
+  <div class="card">
+    <div class="card-title">📅 Wochenanalyse</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Automatisch jeden Montag 07:00 Uhr</p>
+    <button class="btn btn-o btn-sm" onclick="analyseJetzt('woche')">Jetzt erstellen</button>
+    <div id="wochen-analyse" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🗓️ Monatsanalyse</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Automatisch am 1. jeden Monats 08:00 Uhr</p>
+    <button class="btn btn-o btn-sm" onclick="analyseJetzt('monat')">Jetzt erstellen</button>
+    <div id="monats-analyse" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ── EXCEL & DRIVE ──────────────────────────────────── -->
+<div class="page" id="page-excel">
+  <div class="card">
+    <div class="card-title">📁 Google Drive</div>
+    <div style="margin-bottom:14px">
+      <span id="drive-status" class="drive-badge drive-no">⏳ Prüfe...</span>
+    </div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
+      📂 Ordner: <strong style="color:var(--text)">Sportwetten durch KI Multi Agent</strong><br>
+      🔄 Automatisch täglich nach der Analyse hochgeladen<br>
+      📊 Enthält immer die aktuellste Excel-Datei
+    </p>
+    <button class="btn btn-p btn-full" onclick="driveUpload()">
+      ☁️ Jetzt zu Google Drive hochladen
+    </button>
+    <div style="margin-top:10px">
+      <a class="btn btn-o btn-full" href="/api/excel-download">
+        📥 Direkt herunterladen (.xlsx)
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Excel Sheets</div>
+    <div style="font-size:13px;line-height:2;color:var(--muted)">
+      📊 <strong style="color:var(--text)">Empfehlungen</strong> — alle KI-Value Bets<br>
+      🎯 <strong style="color:var(--text)">Meine Wetten</strong> — Top 3 auto-eingetragen<br>
+      💰 <strong style="color:var(--text)">Kapital</strong> — Kapitalverlauf täglich<br>
+      📅 <strong style="color:var(--text)">Wochenanalyse</strong> — KI Wochenbericht<br>
+      🗓️ <strong style="color:var(--text)">Monatsanalyse</strong> — KI Monatsbericht<br>
+      📈 <strong style="color:var(--text)">Statistik</strong> — Formeln & Kennzahlen
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚙️ System Info</div>
+    <div id="sys-info" style="font-size:13px;line-height:1.9;color:var(--muted)">Lade...</div>
+  </div>
+</div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+let _data = {};
+let _stats = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('h-datum').textContent =
+    new Date().toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  tick();
+  setInterval(tick, 60000);
+  ladeAlles();
+  ladeStatus();
+});
+
+function tick() {
+  document.getElementById('htime').textContent =
+    new Date().toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'});
+}
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'statistik') ladeStatistik();
+  if (name === 'verlauf') ladeVerlauf();
+  if (name === 'top3') renderTop3();
+  if (name === 'excel') ladeStatus();
+}
+
+// ── LADEN ──────────────────────────────────────────────────────────
+async function ladeAlles() {
+  try {
+    const res = await fetch('/api/empfehlungen');
+    _data = await res.json();
+    renderHeuteSeite();
+  } catch(e) {
+    document.getElementById('alle-empf').innerHTML =
+      '<div class="empty"><div class="icon">❌</div><p>Verbindungsfehler</p></div>';
+  }
+}
+
+async function ladeStatistik() {
+  try {
+    const res = await fetch('/api/statistik');
+    _stats = await res.json();
+    renderStatistik();
+  } catch(e) {}
+}
+
+async function ladeVerlauf() {
+  if (!_stats.letzte_wetten) await ladeStatistik();
+  renderVerlauf();
+}
+
+async function ladeStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const s = await res.json();
+    document.getElementById('h-kapital').textContent = s.startkapital.toFixed(0) + '€';
+    document.getElementById('h-max').textContent = (s.startkapital * s.max_risiko / 100).toFixed(2) + '€';
+    document.getElementById('drive-status').className =
+      'drive-badge ' + (s.drive_eingerichtet ? 'drive-ok' : 'drive-no');
+    document.getElementById('drive-status').textContent =
+      s.drive_eingerichtet ? '✅ Google Drive verbunden' : '⚠️ Google Drive nicht eingerichtet';
+    document.getElementById('sys-info').innerHTML = `
+      🟢 Status: <strong style="color:var(--green)">Online</strong><br>
+      ⏰ Serverzeit: <strong>${s.uhrzeit}</strong><br>
+      🌙 Nächste Analyse: <strong>23:00 Uhr</strong><br>
+      📅 Wochenanalyse: <strong>Montag 07:00</strong><br>
+      🗓️ Monatsanalyse: <strong>1. d. Monats 08:00</strong><br>
+      💰 Startkapital: <strong>${s.startkapital}€</strong><br>
+      🎯 Max. Risiko: <strong>${s.max_risiko}% pro Wette</strong><br>
+      📊 Excel: <strong style="color:${s.excel_vorhanden?'var(--green)':'var(--red)'}">
+        ${s.excel_vorhanden?'Vorhanden':'Fehlt'}</strong><br>
+      ☁️ Drive: <strong style="color:${s.drive_eingerichtet?'var(--green)':'var(--red)'}">
+        ${s.drive_eingerichtet?'Eingerichtet':'Nicht eingerichtet'}</strong>`;
+  } catch(e) {}
+}
+
+// ── RENDER HEUTE ───────────────────────────────────────────────────
+function renderHeuteSeite() {
+  if (_data.letzter_lauf) {
+    const d = new Date(_data.letzter_lauf);
+    document.getElementById('letzter-lauf').textContent =
+      'Zuletzt: ' + d.toLocaleString('de-AT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }
+  const zs = document.getElementById('zs-box');
+  if (_data.zusammenfassung) {
+    zs.innerHTML = `<div class="zs">💬 ${_data.zusammenfassung}</div>`;
+  }
+  const liste = document.getElementById('alle-empf');
+  const alle = _data.alle_empfehlungen || [];
+  const top3ids = new Set((_data.top3||[]).map(e => e.spiel_id));
+
+  if (!alle.length) {
+    liste.innerHTML = `<div class="empty">
+      <div class="icon">🌙</div>
+      <p>Noch keine Analyse für heute.<br>Täglich automatisch um <strong>23:00 Uhr</strong>.</p>
+      <br><button class="btn btn-p" onclick="analyseStarten()">🔍 Jetzt analysieren</button>
+    </div>`;
+    return;
+  }
+  liste.innerHTML = alle.map(e => renderCard(e, top3ids.has(e.spiel_id))).join('');
+}
+
+// ── RENDER TOP 3 ───────────────────────────────────────────────────
+function renderTop3() {
+  const top3 = _data.top3 || [];
+  const el = document.getElementById('top3-liste');
+  if (!top3.length) {
+    el.innerHTML = '<div class="empty"><div class="icon">⭐</div><p>Heute noch keine Top 3.<br>Analyse läuft um 23:00 Uhr.</p></div>';
+    return;
+  }
+  el.innerHTML = top3.map((e, i) => `
+    <div class="wette-card top3-card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span class="badge bgold">⭐ Platz ${i+1}</span>
+        <span style="font-size:11px;color:var(--muted)">🕐 ${e.zeit||''}</span>
+      </div>
+      <div class="wh">
+        <div>
+          <div class="wt">${e.heim} vs ${e.gast}</div>
+          <div class="wl">🏆 ${e.liga}</div>
+        </div>
+        <div class="wq">${e.quote}</div>
+      </div>
+      <div>
+        <span class="badge bb">▶ ${e.empfehlung}</span>
+        <span class="badge ${e.risiko==='Niedrig'?'bg':e.risiko==='Hoch'?'br':'by'}">${e.risiko||'Mittel'}</span>
+      </div>
+      <div class="einsatz-box">
+        <div class="eb-item">
+          <div class="eb-lbl">EMPF. EINSATZ</div>
+          <div class="eb-val" style="color:var(--gold)">${(e.empfohlener_einsatz||0).toFixed(2)}€</div>
+        </div>
+        <div class="eb-item">
+          <div class="eb-lbl">KELLY EINSATZ</div>
+          <div class="eb-val" style="color:var(--blue)">${(e.kelly_einsatz||0).toFixed(2)}€</div>
+        </div>
+        <div class="eb-item">
+          <div class="eb-lbl">MAX (3%)</div>
+          <div class="eb-val" style="color:var(--muted)">${(e.max_einsatz||0).toFixed(2)}€</div>
+        </div>
+        <div class="eb-item">
+          <div class="eb-lbl">POT. GEWINN</div>
+          <div class="eb-val" style="color:var(--green)">+${(e.potenz_gewinn||0).toFixed(2)}€</div>
+        </div>
+        <div class="eb-item">
+          <div class="eb-lbl">EV</div>
+          <div class="eb-val" style="color:${e.ev>0?'var(--green)':'var(--red)'}">+${(e.ev*100).toFixed(1)}%</div>
+        </div>
+      </div>
+      ${e.einsatz_begruendung?`<div class="begr">🧮 ${e.einsatz_begruendung}</div>`:''}
+      ${e.begruendung?`<div class="begr">💡 ${e.begruendung}</div>`:''}
+    </div>`).join('');
+}
+
+// ── RENDER WETTE CARD ──────────────────────────────────────────────
+function renderCard(emp, istTop3) {
+  const ev = (emp.ev*100).toFixed(2);
+  const rk = (emp.risiko||'').toLowerCase();
+  return `
+  <div class="wette-card ${rk} ${istTop3?'top3-card':''}">
+    <div class="wh">
+      <div>
+        <div class="wt">${emp.heim} vs ${emp.gast}</div>
+        <div class="wl">🏆 ${emp.liga} | 🕐 ${emp.zeit||''}</div>
+      </div>
+      <div class="wq">${emp.quote}</div>
+    </div>
+    <div>
+      ${istTop3?'<span class="badge bgold">⭐ Top 3</span>':''}
+      <span class="badge bb">▶ ${emp.empfehlung}</span>
+      <span class="badge ${emp.risiko==='Niedrig'?'bg':emp.risiko==='Hoch'?'br':'by'}">${emp.risiko||''}</span>
+    </div>
+    <div class="wdet">
+      <div class="di"><div class="dl">EV%</div>
+        <div class="dv" style="color:${emp.ev>0?'var(--green)':'var(--red)'}">+${ev}%</div></div>
+      <div class="di"><div class="dl">Impl.W.</div>
+        <div class="dv">${((emp.implizite_wahrscheinlichkeit||0)*100).toFixed(1)}%</div></div>
+      <div class="di"><div class="dl">Echt.W.</div>
+        <div class="dv" style="color:var(--blue)">${((emp.echte_wahrscheinlichkeit||0)*100).toFixed(1)}%</div></div>
+      <div class="di"><div class="dl">Konfidenz</div>
+        <div class="dv">${emp.konfidenz||0}/10</div></div>
+      <div class="di"><div class="dl">Risiko</div>
+        <div class="dv">${emp.risiko||'–'}</div></div>
+    </div>
+    ${emp.begruendung?`<div class="begr">💡 ${emp.begruendung}</div>`:''}
+  </div>`;
+}
+
+// ── STATISTIK ──────────────────────────────────────────────────────
+function renderStatistik() {
+  const s = _stats;
+  const gv = s.gesamt_gv || 0;
+  const roi = s.roi || 0;
+  const kapital = s.aktuelles_kapital || s.startkapital || 1000;
+
+  document.getElementById('kp-banner').innerHTML = `
+    <div class="kp-card">
+      <div class="kp-val" style="color:var(--gold)">${kapital.toFixed(2)}€</div>
+      <div class="kp-lbl">💰 Aktuelles Kapital</div>
+    </div>
+    <div class="kp-card">
+      <div class="kp-val" style="color:${roi>=0?'var(--green)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(2)}%</div>
+      <div class="kp-lbl">📈 ROI</div>
+    </div>
+    <div class="kp-card">
+      <div class="kp-val" style="color:${gv>=0?'var(--green)':'var(--red)'}">${gv>=0?'+':''}${gv.toFixed(2)}€</div>
+      <div class="kp-lbl">💵 Gesamt G/V</div>
+    </div>
+    <div class="kp-card">
+      <div class="kp-val">${s.trefferquote||0}%</div>
+      <div class="kp-lbl">🎯 Trefferquote</div>
+    </div>`;
+
+  document.getElementById('stats-detail').innerHTML = `
+    <div class="card">
+      <div class="card-title">📊 Detailstatistik</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
+        <div><div style="color:var(--muted);font-size:10px">GESAMT WETTEN</div>
+          <div style="font-size:20px;font-weight:800">${s.gesamt_wetten||0}</div></div>
+        <div><div style="color:var(--muted);font-size:10px">GEWONNEN</div>
+          <div style="font-size:20px;font-weight:800;color:var(--green)">${s.gewonnen||0}</div></div>
+        <div><div style="color:var(--muted);font-size:10px">VERLOREN</div>
+          <div style="font-size:20px;font-weight:800;color:var(--red)">${s.verloren||0}</div></div>
+        <div><div style="color:var(--muted);font-size:10px">OFFEN</div>
+          <div style="font-size:20px;font-weight:800;color:var(--gold)">${s.offen||0}</div></div>
+        <div><div style="color:var(--muted);font-size:10px">STARTKAPITAL</div>
+          <div style="font-size:18px;font-weight:700">${(s.startkapital||1000).toFixed(2)}€</div></div>
+        <div><div style="color:var(--muted);font-size:10px">GESAMT EINSATZ</div>
+          <div style="font-size:18px;font-weight:700">${(s.gesamt_einsatz||0).toFixed(2)}€</div></div>
+      </div>
+    </div>`;
+}
+
+// ── VERLAUF ────────────────────────────────────────────────────────
+function renderVerlauf() {
+  const wetten = _stats.letzte_wetten || [];
+  const el = document.getElementById('verlauf-table');
+  if (!wetten.length) {
+    el.innerHTML = '<div class="empty"><div class="icon">📋</div><p>Noch keine Wetten</p></div>';
+    return;
+  }
+  el.innerHTML = `<table>
+    <thead><tr>
+      <th>Datum</th><th>Spiel</th><th>Tipp</th>
+      <th>Quote</th><th>Einsatz</th><th>G/V</th><th>Status</th>
+    </tr></thead>
+    <tbody>${wetten.map(w => {
+      const gv = w.gewinn_verlust||0;
+      const sc = w.status==='Gewonnen'?'color:var(--green);font-weight:700':
+                 w.status==='Verloren'?'color:var(--red);font-weight:700':'color:var(--gold)';
+      return `<tr>
+        <td>${w.datum||''}</td>
+        <td style="font-weight:600">${w.heim} vs ${w.gast}</td>
+        <td>${w.empfehlung||''}</td>
+        <td style="color:var(--blue);font-weight:700">${w.quote||''}</td>
+        <td>${(w.einsatz||0).toFixed(2)}€</td>
+        <td style="color:${gv>0?'var(--green)':gv<0?'var(--red)':'var(--muted)'};font-weight:700">
+          ${gv>=0?'+':''}${gv.toFixed(2)}€</td>
+        <td style="${sc}">${w.status||'Offen'}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+// ── AKTIONEN ───────────────────────────────────────────────────────
+async function analyseStarten() {
+  const btn = document.getElementById('btn-analyse');
+  btn.disabled = true; btn.textContent = '⏳ Analysiere...';
+  showToast('🤖 KI-Analyse gestartet! Ca. 45 Sek...');
+  try {
+    await fetch('/api/analyse-starten', {method:'POST'});
+    setTimeout(async () => {
+      await ladeAlles();
+      btn.disabled = false; btn.innerHTML = '🔍 Analysieren';
+      showToast('✅ Analyse abgeschlossen!', 3000);
+    }, 50000);
+  } catch(e) {
+    btn.disabled = false; btn.innerHTML = '🔍 Analysieren';
+  }
+}
+
+async function driveUpload() {
+  showToast('☁️ Upload gestartet...');
+  try {
+    await fetch('/api/drive-upload', {method:'POST'});
+    setTimeout(() => showToast('✅ Auf Google Drive hochgeladen!', 3000), 3000);
+  } catch(e) { showToast('❌ Upload-Fehler'); }
+}
+
+async function analyseJetzt(typ) {
+  const id = typ === 'woche' ? 'wochen-analyse' : 'monats-analyse';
+  document.getElementById(id).innerHTML = '<div class="loading"><div class="spinner"></div>KI analysiert...</div>';
+  showToast(`📊 ${typ === 'woche' ? 'Wochen' : 'Monats'}analyse wird erstellt...`);
+  // Trigger via Backend (background task)
+  try {
+    await fetch('/api/analyse-starten', {method:'POST'});
+    setTimeout(() => {
+      document.getElementById(id).innerHTML = '<div class="analyse-text">✅ Analyse läuft im Hintergrund und wird in Excel gespeichert. Lade Excel herunter um sie zu sehen.</div>';
+    }, 2000);
+  } catch(e) {}
+}
+
+function showToast(msg, ms=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+</script>
+</body>
+</html>
