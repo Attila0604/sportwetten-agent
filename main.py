@@ -13,20 +13,22 @@ load_dotenv()
 
 from odds_agent import get_parsed_odds
 from analysis_agent import analysiere_spiele, generiere_wochen_analyse, generiere_monats_analyse
-from excel_agent import erstelle_excel, empfehlungen_hinzufuegen, top3_als_wetten_eintragen, analyse_eintragen, get_statistik, get_kapital, EXCEL_PATH
-
-
-
+from excel_agent import (
+    erstelle_excel, empfehlungen_hinzufuegen, top3_als_wetten_eintragen,
+    analyse_eintragen, get_statistik, get_kapital, EXCEL_PATH
+)
 from gdrive_agent import excel_zu_drive_hochladen
 from whatsapp_agent import sende_tipps, sende_wochen_stats
-    
+from results_agent import ergebnisse_aktualisieren
+
+_cache = {
+    "datum": None, "alle_empfehlungen": [], "top3": [],
+    "zusammenfassung": "", "letzter_lauf": None, "analyse_laeuft": False,
+    "letzte_ergebnisse": None,
+}
 
 scheduler = AsyncIOScheduler(timezone="Europe/Vienna")
-_cache = {
-    "analyse_laeuft": False,
-    "letzter_lauf": "Noch nie",
-    "alle_empfehlungen": []
-}
+
 
 # ── Hauptanalyse täglich 21:00 ────────────────────────────────────────────────
 async def abend_analyse():
@@ -59,11 +61,43 @@ async def abend_analyse():
         print("  → Google Drive Upload...")
         await excel_zu_drive_hochladen()
 
-        print(f"  ✅ Analyse abgeschlossen! {len(top3)} Top-Tipps gesendet\n")
+        print(f"  ✅ Abend-Analyse fertig! {len(top3)} Top-Tipps\n")
     except Exception as e:
         print(f"  ✗ Fehler: {e}\n")
     finally:
         _cache["analyse_laeuft"] = False
+
+
+# ── Ergebnis-Check täglich 10:00 ──────────────────────────────────────────────
+async def ergebnis_check():
+    print(f"\n[{datetime.now().strftime('%d.%m.%Y %H:%M')}] 🏆 Ergebnis-Check 10:00 Uhr...")
+    try:
+        ergebnisse = await ergebnisse_aktualisieren()
+        _cache["letzte_ergebnisse"] = {
+            **ergebnisse,
+            "zeitpunkt": datetime.now().isoformat()
+        }
+
+        if ergebnisse["aktualisiert"] > 0:
+            # WhatsApp mit Ergebnis-Zusammenfassung
+            from whatsapp_agent import sende_whatsapp
+            msg = (
+                f"📊 *ERGEBNIS-UPDATE*\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"✅ Gewonnen: *{ergebnisse['gewonnen']}*\n"
+                f"❌ Verloren: *{ergebnisse['verloren']}*\n"
+                f"🔄 Aktualisiert: *{ergebnisse['aktualisiert']}* Wetten\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"📊 Excel wurde aktualisiert!\n"
+                f"🤖 _Sportwetten KI Multi Agent_"
+            )
+            await sende_whatsapp(msg)
+            await excel_zu_drive_hochladen()
+            print(f"  ✅ {ergebnisse['aktualisiert']} Ergebnisse aktualisiert")
+        else:
+            print(f"  → Keine neuen Ergebnisse")
+    except Exception as e:
+        print(f"  ✗ Ergebnis-Fehler: {e}")
 
 
 # ── Wochenanalyse Montag 07:00 ────────────────────────────────────────────────
@@ -110,14 +144,17 @@ async def lifespan(app: FastAPI):
     if not os.path.exists(EXCEL_PATH):
         erstelle_excel()
         print("✓ Excel erstellt")
+
     scheduler.add_job(abend_analyse,  "cron", hour=21, minute=0,           id="abend")
+    scheduler.add_job(ergebnis_check, "cron", hour=10, minute=0,           id="ergebnisse")
     scheduler.add_job(wochen_analyse, "cron", day_of_week="mon", hour=7,   id="woche")
     scheduler.add_job(monats_analyse, "cron", day=1, hour=8,               id="monat")
     scheduler.start()
     print("✓ Scheduler:")
-    print("  📱 21:00 Uhr  — Analyse + WhatsApp + Drive")
-    print("  📅 Mo 07:00   — Wochenanalyse + WhatsApp")
-    print("  🗓️  1. 08:00   — Monatsanalyse")
+    print("  🌙 21:00  — Analyse + WhatsApp + Drive")
+    print("  🏆 10:00  — Ergebnis-Check + WhatsApp")
+    print("  📅 Mo 07:00 — Wochenanalyse")
+    print("  🗓️  1. 08:00 — Monatsanalyse")
     yield
     scheduler.shutdown()
 
@@ -148,6 +185,11 @@ async def analyse_starten(bg: BackgroundTasks):
     bg.add_task(abend_analyse)
     return {"message": "Analyse gestartet! Ca. 45 Sekunden..."}
 
+@app.post("/api/ergebnisse-pruefen")
+async def ergebnisse_pruefen(bg: BackgroundTasks):
+    bg.add_task(ergebnis_check)
+    return {"message": "Ergebnis-Check gestartet..."}
+
 @app.get("/api/statistik")
 async def get_stats(): return get_statistik()
 
@@ -167,22 +209,24 @@ async def drive_upload(bg: BackgroundTasks):
 async def whatsapp_test():
     from whatsapp_agent import sende_whatsapp
     ok = await sende_whatsapp("✅ *Test erfolgreich!*\nDein Sportwetten KI Agent ist aktiv! ⚽🤖")
-    return {"success": ok, "message": "✅ Gesendet!" if ok else "❌ Fehler - API Key prüfen"}
+    return {"success": ok, "message": "✅ Gesendet!" if ok else "❌ Fehler"}
 
 @app.get("/api/status")
 async def status():
     from whatsapp_agent import WHATSAPP_PHONE, WHATSAPP_API_KEY
     return {
-        "status": "online", "version": "2.1.0",
+        "status": "online", "version": "2.2.0",
         "uhrzeit": datetime.now().strftime("%d.%m.%Y %H:%M"),
         "analyse_laeuft": _cache["analyse_laeuft"],
         "letzter_lauf": _cache["letzter_lauf"],
+        "letzte_ergebnisse": _cache["letzte_ergebnisse"],
         "excel_vorhanden": os.path.exists(EXCEL_PATH),
         "drive_eingerichtet": os.path.exists(os.getenv("GDRIVE_TOKEN_FILE", "data/gdrive_token.json")),
         "whatsapp_eingerichtet": bool(WHATSAPP_PHONE and WHATSAPP_API_KEY),
         "startkapital": float(os.getenv("STARTKAPITAL", "1000")),
         "max_risiko": float(os.getenv("MAX_RISIKO_PROZENT", "3")),
         "naechste_analyse": "21:00 Uhr",
+        "naechster_ergebnis_check": "10:00 Uhr",
     }
 
 if __name__ == "__main__":
