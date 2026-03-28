@@ -22,15 +22,11 @@ SOCCER_SPORTS = [
 
 
 async def hole_ergebnisse(sport: str) -> list:
-    """Holt Spielergebnisse der letzten 2 Tage"""
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.get(
                 f"{BASE_URL}/sports/{sport}/scores/",
-                params={
-                    "apiKey": ODDS_API_KEY,
-                    "daysFrom": 2,
-                }
+                params={"apiKey": ODDS_API_KEY, "daysFrom": 2}
             )
             if resp.status_code == 200:
                 return resp.json()
@@ -40,7 +36,6 @@ async def hole_ergebnisse(sport: str) -> list:
 
 
 async def hole_alle_ergebnisse() -> list:
-    """Holt alle Fußball-Ergebnisse"""
     alle = []
     for sport in SOCCER_SPORTS:
         ergebnisse = await hole_ergebnisse(sport)
@@ -48,6 +43,17 @@ async def hole_alle_ergebnisse() -> list:
             e["liga_key"] = sport
         alle.extend(ergebnisse)
     return alle
+
+
+def _aehnlich(a: str, b: str) -> bool:
+    """Prüft ob zwei Teamnamen ähnlich sind"""
+    a_words = a.split()
+    b_words = b.split()
+    for wa in a_words:
+        for wb in b_words:
+            if len(wa) > 3 and len(wb) > 3 and (wa in wb or wb in wa):
+                return True
+    return False
 
 
 def finde_ergebnis(heim: str, gast: str, ergebnisse: list) -> dict:
@@ -59,19 +65,19 @@ def finde_ergebnis(heim: str, gast: str, ergebnisse: list) -> dict:
         spiel_heim = spiel.get("home_team", "").lower().strip()
         spiel_gast = spiel.get("away_team", "").lower().strip()
 
-        # Exakter Match oder Teil-Match
         heim_match = (heim_lower in spiel_heim or spiel_heim in heim_lower or
                       _aehnlich(heim_lower, spiel_heim))
         gast_match = (gast_lower in spiel_gast or spiel_gast in gast_lower or
                       _aehnlich(gast_lower, spiel_gast))
 
         if heim_match and gast_match and spiel.get("completed"):
-            scores = spiel.get("scores", [])
-            if scores and len(scores) >= 2:
+            scores = spiel.get("scores") or []
+            if len(scores) >= 2:
                 heim_score = None
                 gast_score = None
                 for s in scores:
-                    if s.get("name", "").lower() in spiel_heim:
+                    name = s.get("name", "").lower()
+                    if name in spiel_heim or spiel_heim in name:
                         heim_score = s.get("score")
                     else:
                         gast_score = s.get("score")
@@ -88,17 +94,7 @@ def finde_ergebnis(heim: str, gast: str, ergebnisse: list) -> dict:
     return {}
 
 
-def _aehnlich(a: str, b: str) -> bool:
-    """Prüft ob zwei Teamnamen ähnlich sind"""
-    # Erste Wörter vergleichen
-    a_words = set(a.split())
-    b_words = set(b.split())
-    gemeinsam = a_words & b_words
-    return len(gemeinsam) >= 1 and len(gemeinsam[list(gemeinsam)[0]]) > 3 if gemeinsam else False
-
-
 def berechne_wett_ergebnis(empfehlung: str, heim_score: int, gast_score: int) -> str:
-    """Berechnet ob Wette gewonnen oder verloren"""
     if empfehlung == "Heimsieg":
         return "Gewonnen" if heim_score > gast_score else "Verloren"
     elif empfehlung == "Gastsieg":
@@ -109,7 +105,6 @@ def berechne_wett_ergebnis(empfehlung: str, heim_score: int, gast_score: int) ->
 
 
 def berechne_gewinn_verlust(status: str, einsatz: float, quote: float) -> float:
-    """Berechnet Gewinn oder Verlust"""
     if status == "Gewonnen":
         return round(einsatz * quote - einsatz, 2)
     elif status == "Verloren":
@@ -118,12 +113,13 @@ def berechne_gewinn_verlust(status: str, einsatz: float, quote: float) -> float:
 
 
 async def ergebnisse_aktualisieren() -> dict:
-    """
-    Hauptfunktion: Prüft alle offenen Wetten und aktualisiert Ergebnisse
-    Gibt Zusammenfassung zurück
-    """
-    from excel_agent import get_statistik, wette_aktualisieren, EXCEL_PATH
+    from excel_agent import EXCEL_PATH
     import openpyxl
+    from openpyxl.styles import Font, PatternFill
+
+    GRUEN = "FF2ECC71"
+    ROT = "FFE74C3C"
+    WEISS = "FFFFFFFF"
 
     print(f"  → Hole Spielergebnisse...")
     alle_ergebnisse = await hole_alle_ergebnisse()
@@ -140,12 +136,8 @@ async def ergebnisse_aktualisieren() -> dict:
     gewonnen = 0
     verloren = 0
 
-    # Alle Zeilen durchgehen (ab Zeile 3, Zeile 1+2 = Header)
-    for row_idx, row in enumerate(ws.iter_rows(min_row=3, values_only=False), start=3):
-        status_zelle = ws.cell(row=row_idx, column=15)
-        status = status_zelle.value
-
-        # Nur offene Wetten prüfen
+    for row_idx in range(3, ws.max_row + 1):
+        status = ws.cell(row=row_idx, column=15).value
         if status != "Offen":
             continue
 
@@ -158,7 +150,6 @@ async def ergebnisse_aktualisieren() -> dict:
         if not heim or not gast:
             continue
 
-        # Ergebnis suchen
         ergebnis = finde_ergebnis(str(heim), str(gast), alle_ergebnisse)
 
         if ergebnis.get("abgeschlossen"):
@@ -169,12 +160,6 @@ async def ergebnisse_aktualisieren() -> dict:
             wett_status = berechne_wett_ergebnis(str(empfehlung), heim_score, gast_score)
             gv = berechne_gewinn_verlust(wett_status, float(einsatz), float(quote))
 
-            # Excel aktualisieren
-            from openpyxl.styles import Font, PatternFill
-            GRUEN = "FF2ECC71"
-            ROT = "FFE74C3C"
-            WEISS = "FFFFFFFF"
-
             ws.cell(row=row_idx, column=12).value = endstand
             ws.cell(row=row_idx, column=13).value = f"{heim} {heim_score}:{gast_score} {gast}"
 
@@ -182,24 +167,23 @@ async def ergebnisse_aktualisieren() -> dict:
             gv_z.value = gv
             gv_z.number_format = '#,##0.00'
             gv_z.font = Font(name="Arial", bold=True, size=10,
-                            color=GRUEN if gv > 0 else ROT)
+                             color=GRUEN if gv > 0 else ROT)
 
-            status_z = ws.cell(row=row_idx, column=15)
-            status_z.value = wett_status
+            sz = ws.cell(row=row_idx, column=15)
+            sz.value = wett_status
             if wett_status == "Gewonnen":
-                status_z.fill = PatternFill("solid", start_color=GRUEN)
-                status_z.font = Font(name="Arial", bold=True, color=WEISS, size=10)
+                sz.fill = PatternFill("solid", start_color=GRUEN)
+                sz.font = Font(name="Arial", bold=True, color=WEISS, size=10)
                 gewonnen += 1
             else:
-                status_z.fill = PatternFill("solid", start_color=ROT)
-                status_z.font = Font(name="Arial", bold=True, color=WEISS, size=10)
+                sz.fill = PatternFill("solid", start_color=ROT)
+                sz.font = Font(name="Arial", bold=True, color=WEISS, size=10)
                 verloren += 1
 
             aktualisiert += 1
             print(f"  ✓ {heim} vs {gast}: {endstand} → {wett_status} ({gv:+.2f}€)")
 
     wb.save(EXCEL_PATH)
-
     return {
         "aktualisiert": aktualisiert,
         "gewonnen": gewonnen,
