@@ -79,14 +79,15 @@ async def ergebnis_check():
         }
 
         if ergebnisse["aktualisiert"] > 0:
-            # WhatsApp mit Ergebnis-Zusammenfassung
             from whatsapp_agent import sende_whatsapp
+            tages_gv = ergebnisse.get("tages_gv", 0)
             msg = (
                 f"📊 *ERGEBNIS-UPDATE*\n"
                 f"━━━━━━━━━━━━━━━━━━━━\n"
                 f"✅ Gewonnen: *{ergebnisse['gewonnen']}*\n"
                 f"❌ Verloren: *{ergebnisse['verloren']}*\n"
                 f"🔄 Aktualisiert: *{ergebnisse['aktualisiert']}* Wetten\n"
+                f"💰 Tages G/V: *{tages_gv:+.2f}€*\n"
                 f"━━━━━━━━━━━━━━━━━━━━\n"
                 f"📊 Excel wurde aktualisiert!\n"
                 f"🤖 _Sportwetten KI Multi Agent_"
@@ -96,8 +97,12 @@ async def ergebnis_check():
             print(f"  ✅ {ergebnisse['aktualisiert']} Ergebnisse aktualisiert")
         else:
             print(f"  → Keine neuen Ergebnisse")
+
+        return ergebnisse
+
     except Exception as e:
         print(f"  ✗ Ergebnis-Fehler: {e}")
+        return {"aktualisiert": 0, "gewonnen": 0, "verloren": 0, "fehler": str(e)}
 
 
 # ── Wochenanalyse Montag 07:00 ────────────────────────────────────────────────
@@ -185,10 +190,19 @@ async def analyse_starten(bg: BackgroundTasks):
     bg.add_task(abend_analyse)
     return {"message": "Analyse gestartet! Ca. 45 Sekunden..."}
 
+# FIX: Läuft jetzt synchron und gibt echte Ergebnisse zurück
 @app.post("/api/ergebnisse-pruefen")
-async def ergebnisse_pruefen(bg: BackgroundTasks):
-    bg.add_task(ergebnis_check)
-    return {"message": "Ergebnis-Check gestartet..."}
+async def ergebnisse_pruefen():
+    ergebnisse = await ergebnis_check()
+    return {
+        "message": "Ergebnis-Check abgeschlossen!",
+        "aktualisiert": ergebnisse.get("aktualisiert", 0),
+        "gewonnen": ergebnisse.get("gewonnen", 0),
+        "verloren": ergebnisse.get("verloren", 0),
+        "tages_gv": ergebnisse.get("tages_gv", 0.0),
+        "gesamt_ergebnisse": ergebnisse.get("gesamt_ergebnisse", 0),
+        "fehler": ergebnisse.get("fehler", None),
+    }
 
 @app.get("/api/statistik")
 async def get_stats(): return get_statistik()
