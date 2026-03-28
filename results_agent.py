@@ -26,10 +26,15 @@ async def hole_ergebnisse(sport: str) -> list:
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.get(
                 f"{BASE_URL}/sports/{sport}/scores/",
-                params={"apiKey": ODDS_API_KEY, "daysFrom": 2}
+                params={
+                    "apiKey": ODDS_API_KEY,
+                    "daysFrom": 3  # FIX Bug 1: war 2, zu knapp für Spiele von vor 2+ Tagen
+                }
             )
             if resp.status_code == 200:
                 return resp.json()
+            else:
+                print(f"  API Fehler ({sport}): {resp.status_code}")
     except Exception as e:
         print(f"  Ergebnis-Fehler ({sport}): {e}")
     return []
@@ -42,6 +47,7 @@ async def hole_alle_ergebnisse() -> list:
         for e in ergebnisse:
             e["liga_key"] = sport
         alle.extend(ergebnisse)
+    print(f"  → Gesamt {len(alle)} Spiele von API geladen")
     return alle
 
 
@@ -75,12 +81,25 @@ def finde_ergebnis(heim: str, gast: str, ergebnisse: list) -> dict:
             if len(scores) >= 2:
                 heim_score = None
                 gast_score = None
+
+                # FIX Bug 2: Score-Parsing war fehlerhaft, jetzt beide Teams explizit prüfen
                 for s in scores:
-                    name = s.get("name", "").lower()
-                    if name in spiel_heim or spiel_heim in name:
+                    name = s.get("name", "").lower().strip()
+                    name_match_heim = (name in spiel_heim or spiel_heim in name or
+                                       _aehnlich(name, spiel_heim))
+                    name_match_gast = (name in spiel_gast or spiel_gast in name or
+                                       _aehnlich(name, spiel_gast))
+
+                    if name_match_heim:
                         heim_score = s.get("score")
-                    else:
+                    elif name_match_gast:
                         gast_score = s.get("score")
+
+                # Fallback: Wenn Matching fehlschlägt, Reihenfolge nutzen
+                if heim_score is None and len(scores) >= 1:
+                    heim_score = scores[0].get("score")
+                if gast_score is None and len(scores) >= 2:
+                    gast_score = scores[1].get("score")
 
                 if heim_score is not None and gast_score is not None:
                     return {
@@ -112,6 +131,30 @@ def berechne_gewinn_verlust(status: str, einsatz: float, quote: float) -> float:
     return 0.0
 
 
+def aktualisiere_kapital_sheet(ws_kapital, heute: date, tages_gv: float,
+                                kapital_vorher: float, anzahl_wetten: int):
+    """Schreibt täglichen Kapitalstand ins Kapital-Sheet"""
+    # Nächste leere Zeile finden (ab Zeile 3, da Zeile 1+2 Header)
+    naechste_zeile = 3
+    for row in range(3, ws_kapital.max_row + 2):
+        if ws_kapital.cell(row=row, column=1).value is None:
+            naechste_zeile = row
+            break
+
+    kapital_neu = round(kapital_vorher + tages_gv, 2)
+    roi = round((tages_gv / kapital_vorher * 100), 2) if kapital_vorher > 0 else 0.0
+
+    ws_kapital.cell(row=naechste_zeile, column=1).value = heute.strftime("%d.%m.%Y")
+    ws_kapital.cell(row=naechste_zeile, column=2).value = kapital_neu
+    ws_kapital.cell(row=naechste_zeile, column=3).value = round(tages_gv, 2)
+    ws_kapital.cell(row=naechste_zeile, column=4).value = anzahl_wetten
+    ws_kapital.cell(row=naechste_zeile, column=5).value = roi
+    ws_kapital.cell(row=naechste_zeile, column=6).value = "Auto-Update"
+
+    print(f"  → Kapital-Sheet: {kapital_vorher:.2f}€ + {tages_gv:+.2f}€ = {kapital_neu:.2f}€")
+    return kapital_neu
+
+
 async def ergebnisse_aktualisieren() -> dict:
     from excel_agent import EXCEL_PATH
     import openpyxl
@@ -131,13 +174,29 @@ async def ergebnisse_aktualisieren() -> dict:
 
     wb = openpyxl.load_workbook(EXCEL_PATH)
     ws = wb["Meine Wetten"]
+    ws_kapital = wb["Kapital"]
 
     aktualisiert = 0
     gewonnen = 0
     verloren = 0
+    tages_gv = 0.0
+    kapital_aktuell = 1000.0  # Startkapital
+
+    # Aktuelles Kapital aus letztem Kapital-Eintrag lesen
+    for row in range(ws_kapital.max_row, 2, -1):
+        val = ws_kapital.cell(row=row, column=2).value
+        if val is not None:
+            try:
+                kapital_aktuell = float(val)
+            except:
+                pass
+            break
 
     for row_idx in range(3, ws.max_row + 1):
-        status = ws.cell(row=row_idx, column=15).value
+        status_raw = ws.cell(row=row_idx, column=15).value
+
+        # FIX Bug 4: Whitespace-sicherer Vergleich
+        status = str(status_raw or "").strip()
         if status != "Offen":
             continue
 
@@ -159,16 +218,22 @@ async def ergebnisse_aktualisieren() -> dict:
 
             wett_status = berechne_wett_ergebnis(str(empfehlung), heim_score, gast_score)
             gv = berechne_gewinn_verlust(wett_status, float(einsatz), float(quote))
+            tages_gv += gv
 
+            # Spalte 12: Endstand (z.B. "2:1")
             ws.cell(row=row_idx, column=12).value = endstand
+
+            # Spalte 13: Vollständiger Spielstand
             ws.cell(row=row_idx, column=13).value = f"{heim} {heim_score}:{gast_score} {gast}"
 
+            # Spalte 14: G/V EUR
             gv_z = ws.cell(row=row_idx, column=14)
             gv_z.value = gv
             gv_z.number_format = '#,##0.00'
             gv_z.font = Font(name="Arial", bold=True, size=10,
                              color=GRUEN if gv > 0 else ROT)
 
+            # Spalte 15: Status
             sz = ws.cell(row=row_idx, column=15)
             sz.value = wett_status
             if wett_status == "Gewonnen":
@@ -183,10 +248,23 @@ async def ergebnisse_aktualisieren() -> dict:
             aktualisiert += 1
             print(f"  ✓ {heim} vs {gast}: {endstand} → {wett_status} ({gv:+.2f}€)")
 
+    # FIX Bug 3: Kapital-Sheet befüllen wenn Wetten aktualisiert wurden
+    if aktualisiert > 0:
+        aktualisiere_kapital_sheet(
+            ws_kapital=ws_kapital,
+            heute=date.today(),
+            tages_gv=tages_gv,
+            kapital_vorher=kapital_aktuell,
+            anzahl_wetten=aktualisiert
+        )
+
     wb.save(EXCEL_PATH)
+    print(f"  → Excel gespeichert: {aktualisiert} Wetten aktualisiert")
+
     return {
         "aktualisiert": aktualisiert,
         "gewonnen": gewonnen,
         "verloren": verloren,
+        "tages_gv": round(tages_gv, 2),
         "gesamt_ergebnisse": len(alle_ergebnisse),
     }
