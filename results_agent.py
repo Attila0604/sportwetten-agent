@@ -51,10 +51,33 @@ async def hole_alle_ergebnisse() -> list:
     return alle
 
 
+def _normalisiere(name: str) -> str:
+    """Normalisiert Teamnamen: Umlaute, Sonderzeichen, Präfixe entfernen"""
+    name = name.lower().strip()
+    # Umlaute ersetzen
+    name = name.replace("ä", "a").replace("ö", "o").replace("ü", "u")
+    name = name.replace("ae", "a").replace("oe", "o").replace("ue", "u")
+    name = name.replace("ß", "ss")
+    # Häufige Präfixe/Suffixe entfernen
+    for prefix in ["1. fc ", "fc ", "sc ", "sv ", "vfl ", "vfb ", "bv ", "tsv ", "fsv "]:
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+    name = name.replace(" fc", "").replace(" sc", "").replace(" sv", "")
+    name = name.replace(".", "").replace("-", " ").strip()
+    return name
+
+
 def _aehnlich(a: str, b: str) -> bool:
     """Prüft ob zwei Teamnamen ähnlich sind"""
-    a_words = a.split()
-    b_words = b.split()
+    # Normalisierte Versionen vergleichen
+    na, nb = _normalisiere(a), _normalisiere(b)
+    if na == nb:
+        return True
+    if na in nb or nb in na:
+        return True
+    # Wort-für-Wort Matching
+    a_words = na.split()
+    b_words = nb.split()
     for wa in a_words:
         for wb in b_words:
             if len(wa) > 3 and len(wb) > 3 and (wa in wb or wb in wa):
@@ -75,6 +98,10 @@ def finde_ergebnis(heim: str, gast: str, ergebnisse: list) -> dict:
                       _aehnlich(heim_lower, spiel_heim))
         gast_match = (gast_lower in spiel_gast or spiel_gast in gast_lower or
                       _aehnlich(gast_lower, spiel_gast))
+
+        # Debug-Ausgabe wenn fast ein Match
+        if heim_match and not gast_match:
+            print(f"  ⚡ Heim-Match aber kein Gast: '{gast_lower}' vs '{spiel_gast}'")
 
         if heim_match and gast_match and spiel.get("completed"):
             scores = spiel.get("scores") or []
