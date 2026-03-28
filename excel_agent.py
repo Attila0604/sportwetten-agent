@@ -131,7 +131,8 @@ def _sheet_statistik(ws):
         (12,"Durchschn. Quote"),(13,"Durchschn. Einsatz"),(14,"Beste Wette"),(15,"Schlechteste Wette"),
     ]
     formeln = {
-        3: str(STARTKAPITAL),
+        # FIX Bug 3: STARTKAPITAL als float speichern, nicht als str → verhindert #WERT!
+        3: STARTKAPITAL,
         4: "=C3+SUM('Meine Wetten'!N3:N10000)",
         5: "=C4-C3", 6: "=IF(C3>0,(C4-C3)/C3*100,0)",
         7: "=COUNTA('Meine Wetten'!A3:A10000)",
@@ -159,6 +160,31 @@ def _sheet_statistik(ws):
         v.border = rand()
         ws.column_dimensions["C"].width = 22
 
+
+# ─── DUPLIKAT-HELPER ──────────────────────────────────────────────────────────
+
+def _empfehlung_existiert(ws, datum: str, heim: str, gast: str) -> bool:
+    """Prüft ob eine Empfehlung für Datum+Heim+Gast bereits existiert"""
+    for row in ws.iter_rows(min_row=3, values_only=True):
+        if (str(row[0] or "").strip() == datum and
+                str(row[2] or "").strip().lower() == heim.strip().lower() and
+                str(row[3] or "").strip().lower() == gast.strip().lower()):
+            return True
+    return False
+
+
+def _wette_existiert(ws, datum: str, heim: str, gast: str) -> bool:
+    """Prüft ob eine Wette für Datum+Heim+Gast bereits existiert"""
+    for row in ws.iter_rows(min_row=3, values_only=True):
+        if (str(row[0] or "").strip() == datum and
+                str(row[2] or "").strip().lower() == heim.strip().lower() and
+                str(row[3] or "").strip().lower() == gast.strip().lower()):
+            return True
+    return False
+
+
+# ─── HAUPT-FUNKTIONEN ─────────────────────────────────────────────────────────
+
 def empfehlungen_hinzufuegen(result: dict, datum: str = None):
     if not os.path.exists(EXCEL_PATH):
         erstelle_excel()
@@ -168,15 +194,27 @@ def empfehlungen_hinzufuegen(result: dict, datum: str = None):
     alle = result.get("alle_empfehlungen", [])
     top3_ids = {e.get("spiel_id") for e in result.get("top3", [])}
     zeile = max(ws.max_row + 1, 3)
+    eingefuegt = 0
+    uebersprungen = 0
+
     for i, emp in enumerate(alle):
-        bg = WEISS if i % 2 == 0 else HELLGRAU
-        r = zeile + i
+        heim = emp.get("heim", "")
+        gast = emp.get("gast", "")
+
+        # FIX Bug 1: Duplikat-Check — gleiche Empfehlung nicht doppelt eintragen
+        if _empfehlung_existiert(ws, heute, heim, gast):
+            print(f"  ⏭ Duplikat übersprungen: {heim} vs {gast}")
+            uebersprungen += 1
+            continue
+
+        bg = WEISS if eingefuegt % 2 == 0 else HELLGRAU
+        r = zeile + eingefuegt
         ist_top3 = emp.get("spiel_id") in top3_ids
         ev_p = round(emp.get("ev", 0) * 100, 2)
         row_bg = "FFD4EDDA" if ist_top3 else bg
         vals = [
             (1,heute,None,False,SCHWARZ),(2,emp.get("liga",""),None,False,SCHWARZ),
-            (3,emp.get("heim",""),None,True,NAVY),(4,emp.get("gast",""),None,True,NAVY),
+            (3,heim,None,True,NAVY),(4,gast,None,True,NAVY),
             (5,emp.get("zeit","")[-5:] if len(emp.get("zeit",""))>5 else "",None,False,SCHWARZ),
             (6,emp.get("empfehlung",""),None,True,SCHWARZ),
             (7,emp.get("quote",0),'#,##0.00',True,BLAU),
@@ -191,7 +229,11 @@ def empfehlungen_hinzufuegen(result: dict, datum: str = None):
         for col,val,fmt,fett,fg in vals:
             dz(ws.cell(row=r,column=col),val,fmt,fett,fg,row_bg)
         ws.row_dimensions[r].height = 20
+        eingefuegt += 1
+
     wb.save(EXCEL_PATH)
+    print(f"  → Empfehlungen: {eingefuegt} neu, {uebersprungen} Duplikate übersprungen")
+
 
 def top3_als_wetten_eintragen(top3: list, aktuelles_kapital: float, datum: str = None):
     if not os.path.exists(EXCEL_PATH):
@@ -200,16 +242,28 @@ def top3_als_wetten_eintragen(top3: list, aktuelles_kapital: float, datum: str =
     ws = wb["Meine Wetten"]
     heute = datum or date.today().strftime("%d.%m.%Y")
     zeile = max(ws.max_row + 1, 3)
+    eingefuegt = 0
+    uebersprungen = 0
+
     for i, emp in enumerate(top3):
-        bg = WEISS if i % 2 == 0 else HELLGRAU
-        r = zeile + i
+        heim = emp.get("heim", "")
+        gast = emp.get("gast", "")
+
+        # FIX Bug 2: Duplikat-Check — gleiche Wette nicht doppelt eintragen
+        if _wette_existiert(ws, heute, heim, gast):
+            print(f"  ⏭ Wett-Duplikat übersprungen: {heim} vs {gast}")
+            uebersprungen += 1
+            continue
+
+        bg = WEISS if eingefuegt % 2 == 0 else HELLGRAU
+        r = zeile + eingefuegt
         einsatz = emp.get("empfohlener_einsatz", 0)
         quote = emp.get("quote", 0)
         pot_gewinn = round(einsatz * quote - einsatz, 2)
         ev_p = round(emp.get("ev", 0) * 100, 2)
         vals = [
             (1,heute,None,False,SCHWARZ),(2,emp.get("liga",""),None,False,SCHWARZ),
-            (3,emp.get("heim",""),None,True,NAVY),(4,emp.get("gast",""),None,True,NAVY),
+            (3,heim,None,True,NAVY),(4,gast,None,True,NAVY),
             (5,emp.get("empfehlung",""),None,True,SCHWARZ),
             (6,quote,'#,##0.00',True,BLAU),
             (7,round(aktuelles_kapital,2),'#,##0.00',False,SCHWARZ),
@@ -224,7 +278,11 @@ def top3_als_wetten_eintragen(top3: list, aktuelles_kapital: float, datum: str =
         for col,val,fmt,fett,fg in vals:
             dz(ws.cell(row=r,column=col),val,fmt,fett,fg,bg)
         ws.row_dimensions[r].height = 20
+        eingefuegt += 1
+
     wb.save(EXCEL_PATH)
+    print(f"  → Wetten: {eingefuegt} neu, {uebersprungen} Duplikate übersprungen")
+
 
 def kapital_eintragen(kapital: float, tagesgewinn: float, anzahl_wetten: int, notiz: str = ""):
     if not os.path.exists(EXCEL_PATH):
