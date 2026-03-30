@@ -164,20 +164,18 @@ def _sheet_statistik(ws):
 # ─── DUPLIKAT-HELPER ──────────────────────────────────────────────────────────
 
 def _empfehlung_existiert(ws, datum: str, heim: str, gast: str) -> bool:
-    """Prüft ob eine Empfehlung für Datum+Heim+Gast bereits existiert"""
+    """Prüft ob eine Empfehlung für Heim+Gast bereits existiert (datum-unabhängig)"""
     for row in ws.iter_rows(min_row=3, values_only=True):
-        if (str(row[0] or "").strip() == datum and
-                str(row[2] or "").strip().lower() == heim.strip().lower() and
+        if (str(row[2] or "").strip().lower() == heim.strip().lower() and
                 str(row[3] or "").strip().lower() == gast.strip().lower()):
             return True
     return False
 
 
 def _wette_existiert(ws, datum: str, heim: str, gast: str) -> bool:
-    """Prüft ob eine Wette für Datum+Heim+Gast bereits existiert"""
+    """Prüft ob eine Wette für Heim+Gast bereits existiert (datum-unabhängig)"""
     for row in ws.iter_rows(min_row=3, values_only=True):
-        if (str(row[0] or "").strip() == datum and
-                str(row[2] or "").strip().lower() == heim.strip().lower() and
+        if (str(row[2] or "").strip().lower() == heim.strip().lower() and
                 str(row[3] or "").strip().lower() == gast.strip().lower()):
             return True
     return False
