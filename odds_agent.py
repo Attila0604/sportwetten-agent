@@ -5,7 +5,6 @@ from datetime import datetime
 ODDS_API_KEY = os.getenv("ODDS_API_KEY")
 BASE_URL = "https://api.the-odds-api.com/v4"
 
-# Alle Fußball-Ligen die überwacht werden
 SOCCER_SPORTS = [
     "soccer_germany_bundesliga",
     "soccer_england_league1",
@@ -15,23 +14,22 @@ SOCCER_SPORTS = [
     "soccer_france_ligue_one",
     "soccer_uefa_champs_league",
     "soccer_austria_bundesliga",
-    # NEU: Diese Ligen spielen auch während der Länderspielpause!
     "soccer_fifa_world_cup_qualifiers",
     "soccer_friendly_international",
-    "soccer_germany_bundesliga2"
+    "soccer_germany_bundesliga2",
 ]
 
+
 async def fetch_odds_for_sport(client: httpx.AsyncClient, sport: str) -> list:
-    """Holt Quoten für eine bestimmte Liga"""
+    """Holt Quoten für eine bestimmte Liga – alle verfügbaren Buchmacher"""
     try:
         resp = await client.get(
             f"{BASE_URL}/sports/{sport}/odds/",
             params={
                 "apiKey": ODDS_API_KEY,
-                "regions": "eu", # Wir suchen im ganzen EU-Raum
+                "regions": "eu",
                 "markets": "h2h",
                 "oddsFormat": "decimal",
-                # Den strikten Bet365-Filter haben wir entfernt, um mehr Daten zu bekommen
             },
             timeout=15,
         )
@@ -41,8 +39,9 @@ async def fetch_odds_for_sport(client: httpx.AsyncClient, sport: str) -> list:
     except Exception:
         return []
 
+
 async def fetch_all_football_odds() -> list:
-    """Holt alle Fußball-Quoten"""
+    """Holt alle Fußball-Quoten von allen verfügbaren Buchmachern"""
     all_games = []
     async with httpx.AsyncClient() as client:
         for sport in SOCCER_SPORTS:
@@ -52,16 +51,14 @@ async def fetch_all_football_odds() -> list:
             all_games.extend(games)
     return all_games
 
+
 async def fetch_results(sport: str) -> list:
     """Holt abgeschlossene Spielergebnisse"""
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{BASE_URL}/sports/{sport}/scores/",
-                params={
-                    "apiKey": ODDS_API_KEY,
-                    "daysFrom": 1,
-                },
+                params={"apiKey": ODDS_API_KEY, "daysFrom": 1},
                 timeout=15,
             )
             if resp.status_code == 200:
@@ -70,32 +67,120 @@ async def fetch_results(sport: str) -> list:
         pass
     return []
 
-def parse_game(game: dict) -> dict:
-    """Extrahiert die relevanten Daten eines Spiels, flexibel bei Buchmachern"""
-    bookmakers = game.get("bookmakers", [])
-    
-    # Wenn gar kein Buchmacher Quoten hat, überspringen
-    if not bookmakers:
+
+def berechne_konsens(bookmakers: list, home_team: str, away_team: str) -> dict | None:
+    """
+    Berechnet Konsens-Quoten aus ALLEN verfügbaren Buchmachers.
+    Gibt None zurück wenn weniger als 3 Buchmacher verfügbar sind.
+    """
+    heim_quoten = []
+    unent_quoten = []
+    gast_quoten = []
+    bookie_details = []
+
+    for bookie in bookmakers:
+        for market in bookie.get("markets", []):
+            if market["key"] != "h2h":
+                continue
+            outcomes = {o["name"]: o["price"] for o in market["outcomes"]}
+            q_heim = outcomes.get(home_team, 0)
+            q_unent = outcomes.get("Draw", 0)
+            q_gast = outcomes.get(away_team, 0)
+
+            # Nur verwenden wenn alle 3 Quoten vorhanden
+            if q_heim > 1 and q_unent > 1 and q_gast > 1:
+                heim_quoten.append(q_heim)
+                unent_quoten.append(q_unent)
+                gast_quoten.append(q_gast)
+                bookie_details.append({
+                    "name": bookie["key"],
+                    "quote_heim": q_heim,
+                    "quote_unentschieden": q_unent,
+                    "quote_gast": q_gast,
+                })
+
+    # Mindestens 3 Buchmacher für zuverlässigen Konsens
+    if len(heim_quoten) < 3:
         return None
 
-    # Versuch 1: Wir suchen Bet365. 
-    # Versuch 2: Wenn Bet365 nicht da ist, nehmen wir einfach den allerersten Buchmacher in der Liste!
-    target_bookie = next((b for b in bookmakers if b["key"] == "bet365"), bookmakers[0])
-    
-    odds_data = None
-    for market in target_bookie.get("markets", []):
-        if market["key"] == "h2h":
-            outcomes = {o["name"]: o["price"] for o in market["outcomes"]}
-            odds_data = outcomes
-            break
+    konsens_heim  = round(sum(heim_quoten) / len(heim_quoten), 3)
+    konsens_unent = round(sum(unent_quoten) / len(unent_quoten), 3)
+    konsens_gast  = round(sum(gast_quoten) / len(gast_quoten), 3)
 
-    if not odds_data:
+    return {
+        "konsens_quote_heim": konsens_heim,
+        "konsens_quote_unentschieden": konsens_unent,
+        "konsens_quote_gast": konsens_gast,
+        "anzahl_buchmacher": len(heim_quoten),
+        "alle_buchmacher": bookie_details,
+    }
+
+
+def finde_beste_quote(bookmakers: list, home_team: str, away_team: str) -> dict:
+    """
+    Findet die beste verfügbare Quote für jedes Ergebnis
+    (für den Fall dass der User manuell wettet).
+    """
+    beste = {"heim": 0, "unentschieden": 0, "gast": 0,
+             "bookie_heim": "", "bookie_unent": "", "bookie_gast": ""}
+
+    for bookie in bookmakers:
+        for market in bookie.get("markets", []):
+            if market["key"] != "h2h":
+                continue
+            outcomes = {o["name"]: o["price"] for o in market["outcomes"]}
+            q_heim  = outcomes.get(home_team, 0)
+            q_unent = outcomes.get("Draw", 0)
+            q_gast  = outcomes.get(away_team, 0)
+
+            if q_heim > beste["heim"]:
+                beste["heim"] = q_heim
+                beste["bookie_heim"] = bookie["key"]
+            if q_unent > beste["unentschieden"]:
+                beste["unentschieden"] = q_unent
+                beste["bookie_unent"] = bookie["key"]
+            if q_gast > beste["gast"]:
+                beste["gast"] = q_gast
+                beste["bookie_gast"] = bookie["key"]
+
+    return beste
+
+
+def parse_game(game: dict) -> dict | None:
+    """
+    Extrahiert relevante Daten + Konsens-Quoten aller Buchmacher.
+    Gibt None zurück wenn zu wenig Daten vorhanden.
+    """
+    bookmakers = game.get("bookmakers", [])
+    if not bookmakers:
         return None
 
     home_team = game.get("home_team", "")
     away_team = game.get("away_team", "")
-    commence_time = game.get("commence_time", "")
 
+    # Konsens aus ALLEN Buchmachers berechnen
+    konsens = berechne_konsens(bookmakers, home_team, away_team)
+    if not konsens:
+        return None  # Zu wenige Buchmacher → überspringen
+
+    # Beste verfügbare Quote finden
+    beste = finde_beste_quote(bookmakers, home_team, away_team)
+
+    # Bet365 Quote falls vorhanden (für Referenz)
+    bet365 = next((b for b in bookmakers if b["key"] == "bet365"), None)
+    bet365_quoten = {}
+    if bet365:
+        for market in bet365.get("markets", []):
+            if market["key"] == "h2h":
+                outcomes = {o["name"]: o["price"] for o in market["outcomes"]}
+                bet365_quoten = {
+                    "bet365_heim": outcomes.get(home_team, 0),
+                    "bet365_unentschieden": outcomes.get("Draw", 0),
+                    "bet365_gast": outcomes.get(away_team, 0),
+                }
+
+    # Zeitformat
+    commence_time = game.get("commence_time", "")
     try:
         dt = datetime.fromisoformat(commence_time.replace("Z", "+00:00"))
         spiel_zeit = dt.strftime("%d.%m.%Y %H:%M")
@@ -108,17 +193,36 @@ def parse_game(game: dict) -> dict:
         "heim": home_team,
         "gast": away_team,
         "zeit": spiel_zeit,
-        "quote_heim": odds_data.get(home_team, 0),
-        "quote_unentschieden": odds_data.get("Draw", 0),
-        "quote_gast": odds_data.get(away_team, 0),
+
+        # Konsens-Quoten (Durchschnitt aller Buchmacher)
+        "quote_heim": konsens["konsens_quote_heim"],
+        "quote_unentschieden": konsens["konsens_quote_unentschieden"],
+        "quote_gast": konsens["konsens_quote_gast"],
+
+        # Beste verfügbare Quoten (wo soll man wetten?)
+        "beste_quote_heim": beste["heim"],
+        "beste_quote_heim_bookie": beste["bookie_heim"],
+        "beste_quote_unentschieden": beste["unentschieden"],
+        "beste_quote_unent_bookie": beste["bookie_unent"],
+        "beste_quote_gast": beste["gast"],
+        "beste_quote_gast_bookie": beste["bookie_gast"],
+
+        # Bet365 Referenz
+        **bet365_quoten,
+
+        # Metadaten
+        "anzahl_buchmacher": konsens["anzahl_buchmacher"],
+        "alle_buchmacher": konsens["alle_buchmacher"],
     }
 
+
 async def get_parsed_odds() -> list:
-    """Gibt alle geparsten Spiele mit Quoten zurück"""
+    """Gibt alle geparsten Spiele mit Konsens-Quoten zurück"""
     raw = await fetch_all_football_odds()
     parsed = []
     for game in raw:
         p = parse_game(game)
         if p:
             parsed.append(p)
+    print(f"  → {len(parsed)} Spiele mit Konsens-Quoten (min. 3 Buchmacher)")
     return parsed
