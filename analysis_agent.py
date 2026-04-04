@@ -71,7 +71,7 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
             "tipp":       vb["empfehlung"],
             "quote":      vb["quote"],
             "bookie":     vb["bookie"],
-            "ev_pct":     vb["ev"],
+            "ev":         vb["ev"],
         }
         for vb in top_value
     ]
