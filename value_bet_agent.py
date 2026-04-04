@@ -12,7 +12,7 @@ Logik:
 
 import os
 
-MIN_EV_PROZENT = float(os.getenv("MIN_EV_PROZENT", "5"))   # Mindest-EV in %
+MIN_EV_PROZENT = float(os.getenv("MIN_EV_PROZENT", "0.05"))   # Mindest-EV in %
 MIN_BUCHMACHER = int(os.getenv("MIN_BUCHMACHER", "3"))       # Mindest-Buchmacher für Konsens
 
 
@@ -29,7 +29,7 @@ def berechne_ev(konsens_quote: float, beste_quote: float) -> float:
     """
     if konsens_quote <= 1 or beste_quote <= 1:
         return 0.0
-    return round((beste_quote / konsens_quote - 1) * 100, 2)
+    return round(beste_quote / konsens_quote - 1, 4)
 
 
 def analysiere_value_bets(spiele: list) -> list:
