@@ -1,6 +1,9 @@
 import httpx
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# Wie viele Stunden in die Zukunft schauen (Standard: 24h)
+STUNDEN_VORAUS = int(os.getenv("STUNDEN_VORAUS", "24"))
 
 ODDS_API_KEY = os.getenv("ODDS_API_KEY")
 BASE_URL = "https://api.the-odds-api.com/v4"
@@ -66,6 +69,17 @@ async def fetch_results(sport: str) -> list:
     except Exception:
         pass
     return []
+
+
+def ist_in_naechsten_stunden(commence_time: str, stunden: int = 24) -> bool:
+    """Prüft ob das Spiel innerhalb der nächsten X Stunden stattfindet."""
+    try:
+        dt = datetime.fromisoformat(commence_time.replace("Z", "+00:00"))
+        jetzt = datetime.now(timezone.utc)
+        grenze = jetzt + timedelta(hours=stunden)
+        return jetzt <= dt <= grenze
+    except Exception:
+        return False
 
 
 def berechne_konsens(bookmakers: list, home_team: str, away_team: str) -> dict | None:
@@ -151,6 +165,10 @@ def parse_game(game: dict) -> dict | None:
     Extrahiert relevante Daten + Konsens-Quoten aller Buchmacher.
     Gibt None zurück wenn zu wenig Daten vorhanden.
     """
+    # ── 24h Filter ────────────────────────────────────────────────────────────
+    if not ist_in_naechsten_stunden(game.get("commence_time", ""), STUNDEN_VORAUS):
+        return None
+
     bookmakers = game.get("bookmakers", [])
     if not bookmakers:
         return None
@@ -224,5 +242,5 @@ async def get_parsed_odds() -> list:
         p = parse_game(game)
         if p:
             parsed.append(p)
-    print(f"  → {len(parsed)} Spiele mit Konsens-Quoten (min. 3 Buchmacher)")
+    print(f"  → {len(parsed)} Spiele in den nächsten {STUNDEN_VORAUS}h (min. 3 Buchmacher)")
     return parsed
