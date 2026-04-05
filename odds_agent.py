@@ -2,12 +2,11 @@ import httpx
 import os
 from datetime import datetime, timezone, timedelta
 
-ODDS_API_KEY = os.getenv("ODDS_API_KEY")
-BASE_URL     = "https://api.the-odds-api.com/v4"
+ODDS_API_KEY = os.getenv("ODDS_API_KEY", "")
+BASE_URL = "https://api.the-odds-api.com/v4"
 
 STUNDEN_VORAUS = int(os.getenv("STUNDEN_VORAUS", "24"))
 
-# The Odds API Sport-Keys für Fußball
 SPORT_KEYS = [
     "soccer_epl",
     "soccer_germany_bundesliga",
@@ -20,21 +19,16 @@ SPORT_KEYS = [
 
 
 async def fetch_fixtures_with_odds() -> list:
-    """
-    Holt alle Spiele mit Quoten von The Odds API.
-    1 Request pro Liga – alle Buchmacher auf einmal!
-    """
     alle_spiele = []
-
     async with httpx.AsyncClient() as client:
         for sport_key in SPORT_KEYS:
             try:
                 resp = await client.get(
                     f"{BASE_URL}/sports/{sport_key}/odds",
                     params={
-                        "apiKey":    ODDS_API_KEY,
-                        "regions":   "eu",
-                        "markets":   "h2h",
+                        "apiKey": ODDS_API_KEY,
+                        "regions": "eu",
+                        "markets": "h2h",
                         "oddsFormat": "decimal",
                     },
                     timeout=20,
@@ -47,15 +41,13 @@ async def fetch_fixtures_with_odds() -> list:
                     print(f"  ❌ {sport_key}: {resp.status_code} - {resp.text[:100]}")
             except Exception as e:
                 print(f"  ❌ {sport_key} Fehler: {e}")
-
     return alle_spiele
 
 
 def ist_in_naechsten_stunden(start_time: str, stunden: int = 24) -> bool:
-    """Prüft ob das Spiel in den nächsten X Stunden stattfindet"""
     try:
-        dt     = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
-        jetzt  = datetime.now(timezone.utc)
+        dt = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
+        jetzt = datetime.now(timezone.utc)
         grenze = jetzt + timedelta(hours=stunden)
         return jetzt <= dt <= grenze
     except Exception:
@@ -63,33 +55,6 @@ def ist_in_naechsten_stunden(start_time: str, stunden: int = 24) -> bool:
 
 
 def parse_odds_api_game(fixture: dict) -> dict | None:
-    """
-    Parst ein The Odds API Fixture.
-
-    Struktur:
-    {
-      "id": "...",
-      "sport_key": "soccer_epl",
-      "commence_time": "2024-01-01T15:00:00Z",
-      "home_team": "Arsenal",
-      "away_team": "Chelsea",
-      "bookmakers": [
-        {
-          "key": "bet365",
-          "markets": [
-            {
-              "key": "h2h",
-              "outcomes": [
-                {"name": "Arsenal", "price": 2.10},
-                {"name": "Chelsea", "price": 3.50},
-                {"name": "Draw",    "price": 3.20}
-              ]
-            }
-          ]
-        }
-      ]
-    }
-    """
     start_time = fixture.get("commence_time", "")
     if not ist_in_naechsten_stunden(start_time, STUNDEN_VORAUS):
         return None
@@ -107,27 +72,22 @@ def parse_odds_api_game(fixture: dict) -> dict | None:
     except Exception:
         spiel_zeit = start_time
 
-    # Quoten aus allen Buchmachers sammeln
-    heim_quoten  = []
+    heim_quoten = []
     unent_quoten = []
-    gast_quoten  = []
+    gast_quoten = []
     bookie_details = []
 
     for bookmaker in fixture.get("bookmakers", []):
         bookie_name = bookmaker.get("key", "")
-
         for market in bookmaker.get("markets", []):
             if market.get("key") != "h2h":
                 continue
-
             outcomes = market.get("outcomes", [])
-
-            q_heim  = 0
+            q_heim = 0
             q_unent = 0
-            q_gast  = 0
-
+            q_gast = 0
             for outcome in outcomes:
-                name  = outcome.get("name", "")
+                name = outcome.get("name", "")
                 price = outcome.get("price", 0)
                 if name == heim:
                     q_heim = price
@@ -135,63 +95,53 @@ def parse_odds_api_game(fixture: dict) -> dict | None:
                     q_gast = price
                 elif name == "Draw":
                     q_unent = price
-
             if q_heim > 1 and q_unent > 1 and q_gast > 1:
                 heim_quoten.append(q_heim)
                 unent_quoten.append(q_unent)
                 gast_quoten.append(q_gast)
                 bookie_details.append({
-                    "name":                bookie_name,
-                    "quote_heim":          q_heim,
+                    "name": bookie_name,
+                    "quote_heim": q_heim,
                     "quote_unentschieden": q_unent,
-                    "quote_gast":          q_gast,
+                    "quote_gast": q_gast,
                 })
 
-    # Mindestens 3 Buchmacher für zuverlässigen Konsens
     if len(heim_quoten) < 3:
         return None
 
-    # Konsens = Durchschnitt
-    konsens_heim  = round(sum(heim_quoten) / len(heim_quoten), 3)
+    konsens_heim = round(sum(heim_quoten) / len(heim_quoten), 3)
     konsens_unent = round(sum(unent_quoten) / len(unent_quoten), 3)
-    konsens_gast  = round(sum(gast_quoten) / len(gast_quoten), 3)
+    konsens_gast = round(sum(gast_quoten) / len(gast_quoten), 3)
 
-    # Beste verfügbare Quote
-    beste_heim  = max(heim_quoten)
+    beste_heim = max(heim_quoten)
     beste_unent = max(unent_quoten)
-    beste_gast  = max(gast_quoten)
-    bookie_heim  = bookie_details[heim_quoten.index(beste_heim)]["name"]
+    beste_gast = max(gast_quoten)
+    bookie_heim = bookie_details[heim_quoten.index(beste_heim)]["name"]
     bookie_unent = bookie_details[unent_quoten.index(beste_unent)]["name"]
-    bookie_gast  = bookie_details[gast_quoten.index(beste_gast)]["name"]
+    bookie_gast = bookie_details[gast_quoten.index(beste_gast)]["name"]
 
     return {
-        "id":   fixture.get("id"),
+        "id": fixture.get("id"),
         "liga": liga,
         "heim": heim,
         "gast": gast,
         "zeit": spiel_zeit,
-
-        # Konsens-Quoten
-        "quote_heim":          konsens_heim,
+        "quote_heim": konsens_heim,
         "quote_unentschieden": konsens_unent,
-        "quote_gast":          konsens_gast,
-
-        # Beste verfügbare Quoten
-        "beste_quote_heim":          beste_heim,
-        "beste_quote_heim_bookie":   bookie_heim,
+        "quote_gast": konsens_gast,
+        "beste_quote_heim": beste_heim,
+        "beste_quote_heim_bookie": bookie_heim,
         "beste_quote_unentschieden": beste_unent,
-        "beste_quote_unent_bookie":  bookie_unent,
-        "beste_quote_gast":          beste_gast,
-        "beste_quote_gast_bookie":   bookie_gast,
-
+        "beste_quote_unent_bookie": bookie_unent,
+        "beste_quote_gast": beste_gast,
+        "beste_quote_gast_bookie": bookie_gast,
         "anzahl_buchmacher": len(heim_quoten),
-        "alle_buchmacher":   bookie_details,
+        "alle_buchmacher": bookie_details,
     }
 
 
 async def get_parsed_odds() -> list:
-    """Gibt alle geparsten Spiele der nächsten 24h zurück"""
-    raw    = await fetch_fixtures_with_odds()
+    raw = await fetch_fixtures_with_odds()
     parsed = []
     for fixture in raw:
         p = parse_odds_api_game(fixture)
@@ -202,7 +152,6 @@ async def get_parsed_odds() -> list:
 
 
 async def fetch_results(sport: str = None) -> list:
-    """Ergebnisse abrufen – kompatibel mit results_agent"""
     alle_results = []
     async with httpx.AsyncClient() as client:
         for sport_key in SPORT_KEYS:
@@ -210,8 +159,8 @@ async def fetch_results(sport: str = None) -> list:
                 resp = await client.get(
                     f"{BASE_URL}/sports/{sport_key}/scores",
                     params={
-                        "apiKey":      ODDS_API_KEY,
-                        "daysFrom":    1,
+                        "apiKey": ODDS_API_KEY,
+                        "daysFrom": 1,
                     },
                     timeout=15,
                 )
