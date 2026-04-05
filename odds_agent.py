@@ -2,99 +2,101 @@ import httpx
 import os
 from datetime import datetime, timezone, timedelta
 
-ODDSPAPI_KEY = os.getenv("ODDSPAPI_KEY")
-BASE_URL     = "https://api.oddspapi.io/v4"
+ODDS_API_KEY = os.getenv("ODDS_API_KEY")
+BASE_URL     = "https://api.the-odds-api.com/v4"
 
 STUNDEN_VORAUS = int(os.getenv("STUNDEN_VORAUS", "24"))
 
-TOURNAMENT_IDS = os.getenv("TOURNAMENT_IDS",
-    "17,8,572,23,679,34,13,35,572,10,42"
-)
-
-# Bookmaker-Liste – je mehr, desto besser der Konsens
-BOOKMAKERS = os.getenv("BOOKMAKERS",
-    "pinnacle,bet365,unibet,bwin,williamhill"
-).split(",")
-
-
-async def fetch_odds_for_bookmaker(client: httpx.AsyncClient, bookmaker: str) -> list:
-    """Holt Quoten für EINEN Buchmacher (API-Requirement)"""
-    try:
-        resp = await client.get(
-            f"{BASE_URL}/odds-by-tournaments",
-            params={
-                "apiKey":        ODDSPAPI_KEY,
-                "tournamentIds": TOURNAMENT_IDS,
-                "oddsFormat":    "decimal",
-                "bookmaker":     bookmaker.strip(),  # ← Pflichtfeld!
-            },
-            timeout=20,
-        )
-        if resp.status_code == 200:
-            return resp.json()
-        else:
-            print(f"  OddsPapi Fehler [{bookmaker}]: {resp.status_code} - {resp.text[:200]}")
-            return []
-    except Exception as e:
-        print(f"  OddsPapi Fetch Fehler [{bookmaker}]: {e}")
-        return []
+# The Odds API Sport-Keys für Fußball
+SPORT_KEYS = [
+    "soccer_epl",
+    "soccer_germany_bundesliga",
+    "soccer_spain_la_liga",
+    "soccer_italy_serie_a",
+    "soccer_france_ligue_one",
+    "soccer_uefa_champs_league",
+    "soccer_austria_bundesliga",
+]
 
 
 async def fetch_fixtures_with_odds() -> list:
     """
-    Holt Quoten von mehreren Buchmachers (je 1 Request pro Bookie)
-    und merged die bookmakerOdds in eine kombinierte Fixture-Liste.
+    Holt alle Spiele mit Quoten von The Odds API.
+    1 Request pro Liga – alle Buchmacher auf einmal!
     """
-    # fixture_id → merged fixture dict
-    merged: dict[str, dict] = {}
+    alle_spiele = []
 
     async with httpx.AsyncClient() as client:
-        for bookmaker in BOOKMAKERS:
-            fixtures = await fetch_odds_for_bookmaker(client, bookmaker)
-            for fixture in fixtures:
-                fid = fixture.get("fixtureId") or fixture.get("id")
-                if not fid:
-                    continue
-
-                if fid not in merged:
-                    # Erste Begegnung mit diesem Fixture → übernehmen
-                    merged[fid] = fixture
-                    if "bookmakerOdds" not in merged[fid]:
-                        merged[fid]["bookmakerOdds"] = {}
+        for sport_key in SPORT_KEYS:
+            try:
+                resp = await client.get(
+                    f"{BASE_URL}/sports/{sport_key}/odds",
+                    params={
+                        "apiKey":    ODDS_API_KEY,
+                        "regions":   "eu",
+                        "markets":   "h2h",
+                        "oddsFormat": "decimal",
+                    },
+                    timeout=20,
+                )
+                if resp.status_code == 200:
+                    spiele = resp.json()
+                    alle_spiele.extend(spiele)
+                    print(f"  ✅ {sport_key}: {len(spiele)} Spiele")
                 else:
-                    # Fixture existiert schon → nur bookmakerOdds ergänzen
-                    if "bookmakerOdds" not in merged[fid]:
-                        merged[fid]["bookmakerOdds"] = {}
+                    print(f"  ❌ {sport_key}: {resp.status_code} - {resp.text[:100]}")
+            except Exception as e:
+                print(f"  ❌ {sport_key} Fehler: {e}")
 
-                # bookmakerOdds aus dieser Antwort reinmergen
-                bookie_odds = fixture.get("bookmakerOdds", {})
-                merged[fid]["bookmakerOdds"].update(bookie_odds)
+    return alle_spiele
 
-    result = list(merged.values())
-    print(f"  → {len(result)} unique Fixtures von {len(BOOKMAKERS)} Buchmachers gemergt")
-    return result
-
-
-# --- Rest bleibt unverändert ---
 
 def ist_in_naechsten_stunden(start_time: str, stunden: int = 24) -> bool:
+    """Prüft ob das Spiel in den nächsten X Stunden stattfindet"""
     try:
-        dt    = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
-        jetzt = datetime.now(timezone.utc)
+        dt     = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
+        jetzt  = datetime.now(timezone.utc)
         grenze = jetzt + timedelta(hours=stunden)
         return jetzt <= dt <= grenze
     except Exception:
         return False
 
 
-def parse_oddspapi_game(fixture: dict) -> dict | None:
-    start_time = fixture.get("startTime", "")
+def parse_odds_api_game(fixture: dict) -> dict | None:
+    """
+    Parst ein The Odds API Fixture.
+
+    Struktur:
+    {
+      "id": "...",
+      "sport_key": "soccer_epl",
+      "commence_time": "2024-01-01T15:00:00Z",
+      "home_team": "Arsenal",
+      "away_team": "Chelsea",
+      "bookmakers": [
+        {
+          "key": "bet365",
+          "markets": [
+            {
+              "key": "h2h",
+              "outcomes": [
+                {"name": "Arsenal", "price": 2.10},
+                {"name": "Chelsea", "price": 3.50},
+                {"name": "Draw",    "price": 3.20}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    """
+    start_time = fixture.get("commence_time", "")
     if not ist_in_naechsten_stunden(start_time, STUNDEN_VORAUS):
         return None
 
-    heim = fixture.get("participant1Name", "")
-    gast = fixture.get("participant2Name", "")
-    liga = fixture.get("tournamentName", "")
+    heim = fixture.get("home_team", "")
+    gast = fixture.get("away_team", "")
+    liga = fixture.get("sport_key", "").replace("_", " ").title()
 
     if not heim or not gast:
         return None
@@ -105,43 +107,56 @@ def parse_oddspapi_game(fixture: dict) -> dict | None:
     except Exception:
         spiel_zeit = start_time
 
-    bookie_odds = fixture.get("bookmakerOdds", {})
-
+    # Quoten aus allen Buchmachers sammeln
     heim_quoten  = []
     unent_quoten = []
     gast_quoten  = []
     bookie_details = []
 
-    for bookie_name, bookie_data in bookie_odds.items():
-        if not bookie_data.get("bookmakerIsActive", True):
-            continue
+    for bookmaker in fixture.get("bookmakers", []):
+        bookie_name = bookmaker.get("key", "")
 
-        markets    = bookie_data.get("markets", {})
-        market_101 = markets.get("101", {})
-        outcomes   = market_101.get("outcomes", {})
+        for market in bookmaker.get("markets", []):
+            if market.get("key") != "h2h":
+                continue
 
-        q_heim  = outcomes.get("101", {}).get("players", {}).get("0", {}).get("price", 0)
-        q_unent = outcomes.get("102", {}).get("players", {}).get("0", {}).get("price", 0)
-        q_gast  = outcomes.get("103", {}).get("players", {}).get("0", {}).get("price", 0)
+            outcomes = market.get("outcomes", [])
 
-        if q_heim > 1 and q_unent > 1 and q_gast > 1:
-            heim_quoten.append(q_heim)
-            unent_quoten.append(q_unent)
-            gast_quoten.append(q_gast)
-            bookie_details.append({
-                "name":                bookie_name,
-                "quote_heim":          q_heim,
-                "quote_unentschieden": q_unent,
-                "quote_gast":          q_gast,
-            })
+            q_heim  = 0
+            q_unent = 0
+            q_gast  = 0
 
+            for outcome in outcomes:
+                name  = outcome.get("name", "")
+                price = outcome.get("price", 0)
+                if name == heim:
+                    q_heim = price
+                elif name == gast:
+                    q_gast = price
+                elif name == "Draw":
+                    q_unent = price
+
+            if q_heim > 1 and q_unent > 1 and q_gast > 1:
+                heim_quoten.append(q_heim)
+                unent_quoten.append(q_unent)
+                gast_quoten.append(q_gast)
+                bookie_details.append({
+                    "name":                bookie_name,
+                    "quote_heim":          q_heim,
+                    "quote_unentschieden": q_unent,
+                    "quote_gast":          q_gast,
+                })
+
+    # Mindestens 3 Buchmacher für zuverlässigen Konsens
     if len(heim_quoten) < 3:
         return None
 
+    # Konsens = Durchschnitt
     konsens_heim  = round(sum(heim_quoten) / len(heim_quoten), 3)
     konsens_unent = round(sum(unent_quoten) / len(unent_quoten), 3)
     konsens_gast  = round(sum(gast_quoten) / len(gast_quoten), 3)
 
+    # Beste verfügbare Quote
     beste_heim  = max(heim_quoten)
     beste_unent = max(unent_quoten)
     beste_gast  = max(gast_quoten)
@@ -150,16 +165,18 @@ def parse_oddspapi_game(fixture: dict) -> dict | None:
     bookie_gast  = bookie_details[gast_quoten.index(beste_gast)]["name"]
 
     return {
-        "id":   fixture.get("fixtureId"),
+        "id":   fixture.get("id"),
         "liga": liga,
         "heim": heim,
         "gast": gast,
         "zeit": spiel_zeit,
 
+        # Konsens-Quoten
         "quote_heim":          konsens_heim,
         "quote_unentschieden": konsens_unent,
         "quote_gast":          konsens_gast,
 
+        # Beste verfügbare Quoten
         "beste_quote_heim":          beste_heim,
         "beste_quote_heim_bookie":   bookie_heim,
         "beste_quote_unentschieden": beste_unent,
@@ -173,10 +190,11 @@ def parse_oddspapi_game(fixture: dict) -> dict | None:
 
 
 async def get_parsed_odds() -> list:
+    """Gibt alle geparsten Spiele der nächsten 24h zurück"""
     raw    = await fetch_fixtures_with_odds()
     parsed = []
     for fixture in raw:
-        p = parse_oddspapi_game(fixture)
+        p = parse_odds_api_game(fixture)
         if p:
             parsed.append(p)
     print(f"  → {len(parsed)} Spiele in den nächsten {STUNDEN_VORAUS}h ({len(raw)} gesamt)")
@@ -184,19 +202,21 @@ async def get_parsed_odds() -> list:
 
 
 async def fetch_results(sport: str = None) -> list:
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{BASE_URL}/fixtures",
-                params={
-                    "apiKey":   ODDSPAPI_KEY,
-                    "status":   "finished",
-                    "daysFrom": 1,
-                },
-                timeout=15,
-            )
-            if resp.status_code == 200:
-                return resp.json()
-    except Exception as e:
-        print(f"  Results Fehler: {e}")
-    return []
+    """Ergebnisse abrufen – kompatibel mit results_agent"""
+    alle_results = []
+    async with httpx.AsyncClient() as client:
+        for sport_key in SPORT_KEYS:
+            try:
+                resp = await client.get(
+                    f"{BASE_URL}/sports/{sport_key}/scores",
+                    params={
+                        "apiKey":      ODDS_API_KEY,
+                        "daysFrom":    1,
+                    },
+                    timeout=15,
+                )
+                if resp.status_code == 200:
+                    alle_results.extend(resp.json())
+            except Exception as e:
+                print(f"  Results Fehler [{sport_key}]: {e}")
+    return alle_results
