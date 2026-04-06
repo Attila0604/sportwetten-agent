@@ -4,6 +4,7 @@ from datetime import datetime
 import anthropic
 
 from value_bet_agent import analysiere_value_bets, top_value_bets
+from stats_agent import hole_statistiken_fuer_spiel
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
@@ -61,13 +62,24 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
         return {
             "alle_empfehlungen": [],
             "top3": [],
-            "zusammenfassung": f"Keine Value Bets gefunden (EV-Filter).",
+            "zusammenfassung": "Keine Value Bets gefunden (EV-Filter).",
             "value_bets_gesamt": 0,
             "value_bets_roh": [],
         }
 
-    vb_liste = [
-        {
+    # ── Statistiken für Top 5 holen ──────────────────────────────────────────
+    print("  → Statistiken von API-Football holen...")
+    vb_liste = []
+    for vb in top_value:
+        stats = {}
+        try:
+            stats = await hole_statistiken_fuer_spiel(
+                vb["heim"], vb["gast"], vb["liga"]
+            )
+        except Exception as e:
+            print(f"  Stats Fehler [{vb['heim']} vs {vb['gast']}]: {e}")
+
+        eintrag = {
             "heim":   vb["heim"],
             "gast":   vb["gast"],
             "liga":   vb["liga"],
@@ -77,14 +89,26 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
             "bookie": vb["bookie"],
             "ev":     vb["ev"],
         }
-        for vb in top_value
-    ]
+
+        # Statistiken hinzufügen falls vorhanden
+        if stats:
+            eintrag["statistiken"] = {
+                "heim_form":         stats.get("heim_form", "N/A"),
+                "gast_form":         stats.get("gast_form", "N/A"),
+                "heim_tore_schnitt": stats.get("heim_tore_schnitt", {}),
+                "gast_tore_schnitt": stats.get("gast_tore_schnitt", {}),
+                "h2h":               stats.get("h2h", {}),
+            }
+
+        vb_liste.append(eintrag)
 
     prompt = (
         f"Datum: {morgen} | Kapital: {kapital:.2f}EUR | Max-Einsatz: {max_e:.2f}EUR\n"
         f"Gesamt Value Bets: {anzahl_vb}\n"
-        f"Top 5:\n{json.dumps(vb_liste, ensure_ascii=False)}\n\n"
-        f"Waehle TOP 3. Antworte NUR mit diesem JSON:\n"
+        f"Top 5 mit Statistiken:\n{json.dumps(vb_liste, ensure_ascii=False)}\n\n"
+        f"Analysiere die Statistiken (Form, H2H, Tore) und waehle TOP 3.\n"
+        f"Beruecksichtige: Form der letzten 5 Spiele, H2H Historie, Tore-Schnitt.\n"
+        f"Antworte NUR mit diesem JSON:\n"
         '{"top3":[{"heim":"","gast":"","liga":"","zeit":"","empfehlung":"",'
         '"quote":0,"bookie":"","ev":0,"konfidenz":0,"risiko":"",'
         '"begruendung":"","empfohlener_einsatz":0,"echte_wahrscheinlichkeit":0,'
@@ -103,7 +127,7 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
         text = bereinige_json(msg.content[0].text)
         result = json.loads(text)
 
-        # ── FIX: nur Dictionaries durchlassen ────────────────────────────────
+        # Nur Dictionaries durchlassen
         top3 = [emp for emp in result.get("top3", []) if isinstance(emp, dict)]
         alle = [emp for emp in result.get("alle_empfehlungen", []) if isinstance(emp, dict)]
 
@@ -139,7 +163,7 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
                 **vb,
                 "konfidenz":                7,
                 "risiko":                   "Mittel",
-                "begruendung":              f"Value Bet: EV +{vb['ev']}% (Konsens-Methode)",
+                "begruendung":              f"Value Bet: EV +{vb['ev']*100:.1f}% (Konsens-Methode)",
                 "empfohlener_einsatz":      einsatz,
                 "echte_wahrscheinlichkeit": vb.get("implizite_wahrscheinlichkeit", 0),
                 "potenz_gewinn":            round(einsatz * vb["quote"] - einsatz, 2),
