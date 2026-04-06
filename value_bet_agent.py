@@ -12,35 +12,40 @@ Logik:
 
 import os
 
-MIN_EV     = float(os.getenv("MIN_EV_PROZENT", "0.03"))  # Mindest-EV (0.03 = 3%)
-MAX_QUOTE  = float(os.getenv("MAX_QUOTE", "3.50"))        # Maximale Quote
-MIN_BOOKIE = int(os.getenv("MIN_BUCHMACHER", "3"))        # Mindest-Buchmacher
+MIN_EV     = float(os.getenv("MIN_EV_PROZENT", "0.03"))
+MAX_QUOTE  = float(os.getenv("MAX_QUOTE", "3.50"))
+MIN_BOOKIE = int(os.getenv("MIN_BUCHMACHER", "3"))
+
+# Nur Top-Ligen für zuverlässigen Konsens
+ERLAUBTE_LIGEN = [
+    "Soccer Epl",
+    "Soccer Germany Bundesliga",
+    "Soccer Spain La Liga",
+    "Soccer Italy Serie A",
+    "Soccer France Ligue One",
+    "Soccer Uefa Champs League",
+    "Soccer Austria Bundesliga",
+]
 
 
 def berechne_ev(konsens_quote: float, beste_quote: float) -> float:
-    """
-    EV = beste_quote / konsens_quote - 1
-    Beispiel: Konsens 2.00, Beste 2.20 → EV = 0.10 (= 10%)
-    """
     if konsens_quote <= 1 or beste_quote <= 1:
         return 0.0
     return round(beste_quote / konsens_quote - 1, 4)
 
 
 def analysiere_value_bets(spiele: list) -> list:
-    """
-    Gibt nur Value Bets zurück die:
-    - EV >= MIN_EV (Standard: 3%)
-    - Quote <= MAX_QUOTE (Standard: 3.50)
-    - Mindestens MIN_BOOKIE Buchmacher (Standard: 3)
-    - Pro Spiel nur der beste Tipp (höchster EV)
-    """
     value_bets = []
 
     for spiel in spiele:
         if not isinstance(spiel, dict):
             continue
         if spiel.get("anzahl_buchmacher", 0) < MIN_BOOKIE:
+            continue
+
+        # Ligafilter
+        liga = spiel.get("liga", "")
+        if liga not in ERLAUBTE_LIGEN:
             continue
 
         kandidaten = [
@@ -80,7 +85,7 @@ def analysiere_value_bets(spiele: list) -> list:
                 "spiel_id":                    spiel.get("id"),
                 "heim":                        spiel.get("heim"),
                 "gast":                        spiel.get("gast"),
-                "liga":                        spiel.get("liga"),
+                "liga":                        liga,
                 "zeit":                        spiel.get("zeit"),
                 "empfehlung":                  k["ergebnis"],
                 "quote":                       k["beste_quote"],
@@ -95,7 +100,7 @@ def analysiere_value_bets(spiele: list) -> list:
     # Sortiert nach EV (beste zuerst)
     value_bets.sort(key=lambda x: x["ev"], reverse=True)
 
-    # Pro Spiel nur den besten Tipp (höchster EV)
+    # Pro Spiel nur den besten Tipp
     gesehen = set()
     unique_bets = []
     for vb in value_bets:
@@ -110,15 +115,12 @@ def analysiere_value_bets(spiele: list) -> list:
 
 
 def top_value_bets(value_bets: list, anzahl: int = 3) -> list:
-    """Gibt die besten N Value Bets zurück"""
     return value_bets[:anzahl]
 
 
 def format_value_bet_summary(value_bets: list) -> str:
-    """Formatiert Value Bets als übersichtlichen Text"""
     if not value_bets:
         return f"Heute keine Value Bets (EV<{MIN_EV*100:.0f}% oder Quote>{MAX_QUOTE})."
-
     lines = [f"⚡ {len(value_bets)} VALUE BETS GEFUNDEN\n"]
     for i, vb in enumerate(value_bets, 1):
         lines.append(
