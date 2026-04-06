@@ -1,4 +1,5 @@
 import httpx
+import asyncio
 import os
 from datetime import datetime, timezone, timedelta
 
@@ -37,10 +38,35 @@ async def fetch_fixtures_with_odds() -> list:
                     spiele = resp.json()
                     alle_spiele.extend(spiele)
                     print(f"  ✅ {sport_key}: {len(spiele)} Spiele")
+                elif resp.status_code == 429:
+                    print(f"  ⚠️ {sport_key}: Rate Limit - warte 5 Sekunden...")
+                    await asyncio.sleep(5)
+                    # Nochmal versuchen
+                    resp2 = await client.get(
+                        f"{BASE_URL}/sports/{sport_key}/odds",
+                        params={
+                            "apiKey": ODDS_API_KEY,
+                            "regions": "eu",
+                            "markets": "h2h",
+                            "oddsFormat": "decimal",
+                        },
+                        timeout=20,
+                    )
+                    if resp2.status_code == 200:
+                        spiele = resp2.json()
+                        alle_spiele.extend(spiele)
+                        print(f"  ✅ {sport_key}: {len(spiele)} Spiele (Retry)")
+                    else:
+                        print(f"  ❌ {sport_key}: {resp2.status_code} - übersprungen")
                 else:
                     print(f"  ❌ {sport_key}: {resp.status_code} - {resp.text[:100]}")
+
+                # 1 Sekunde Pause zwischen Requests → kein Rate Limit
+                await asyncio.sleep(1)
+
             except Exception as e:
                 print(f"  ❌ {sport_key} Fehler: {e}")
+
     return alle_spiele
 
 
@@ -166,6 +192,7 @@ async def fetch_results(sport: str = None) -> list:
                 )
                 if resp.status_code == 200:
                     alle_results.extend(resp.json())
+                await asyncio.sleep(1)
             except Exception as e:
                 print(f"  Results Fehler [{sport_key}]: {e}")
     return alle_results
