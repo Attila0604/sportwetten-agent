@@ -39,7 +39,18 @@ async def abend_analyse():
         print(f"  → {len(spiele)} Spiele")
         kapital = get_kapital()
         result = await analysiere_spiele(spiele, kapital)
-        top3 = result.get("top3", [])
+
+        # ── Konfidenz Filter ≥ 7 ─────────────────────────────────────────────
+        top3_roh = result.get("top3", [])
+        top3 = [
+            emp for emp in top3_roh
+            if isinstance(emp, dict) and emp.get("konfidenz", 0) >= 7
+        ]
+        # Fallback: Falls alle rausgefiltert → besten nehmen
+        if not top3 and top3_roh:
+            top3 = [top3_roh[0]] if isinstance(top3_roh[0], dict) else []
+        # ─────────────────────────────────────────────────────────────────────
+
         alle = result.get("alle_empfehlungen", [])
         morgen = (datetime.now() + timedelta(days=1)).strftime("%d.%m.%Y")
 
@@ -150,10 +161,10 @@ async def lifespan(app: FastAPI):
         erstelle_excel()
         print("✓ Excel erstellt")
 
-    scheduler.add_job(abend_analyse,  "cron", hour=21, minute=0,           id="abend")
-    scheduler.add_job(ergebnis_check, "cron", hour=10, minute=0,           id="ergebnisse")
-    scheduler.add_job(wochen_analyse, "cron", day_of_week="mon", hour=7,   id="woche")
-    scheduler.add_job(monats_analyse, "cron", day=1, hour=8,               id="monat")
+    scheduler.add_job(abend_analyse,  "cron", hour=21, minute=0,         id="abend")
+    scheduler.add_job(ergebnis_check, "cron", hour=10, minute=0,         id="ergebnisse")
+    scheduler.add_job(wochen_analyse, "cron", day_of_week="mon", hour=7, id="woche")
+    scheduler.add_job(monats_analyse, "cron", day=1, hour=8,             id="monat")
     scheduler.start()
     print("✓ Scheduler:")
     print("  🌙 21:00  — Analyse + WhatsApp + Drive")
@@ -170,17 +181,18 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.get("/")
-async def root(): return FileResponse(str(static_dir / "index.html"))
+async def root():
+    return FileResponse(str(static_dir / "index.html"))
 
 @app.get("/api/empfehlungen")
 async def get_empfehlungen():
     return JSONResponse({
         "alle_empfehlungen": _cache["alle_empfehlungen"],
-        "top3": _cache["top3"],
-        "zusammenfassung": _cache["zusammenfassung"],
-        "letzter_lauf": _cache["letzter_lauf"],
-        "analyse_laeuft": _cache["analyse_laeuft"],
-        "datum": date.today().isoformat(),
+        "top3":              _cache["top3"],
+        "zusammenfassung":   _cache["zusammenfassung"],
+        "letzter_lauf":      _cache["letzter_lauf"],
+        "analyse_laeuft":    _cache["analyse_laeuft"],
+        "datum":             date.today().isoformat(),
     })
 
 @app.post("/api/analyse-starten")
@@ -190,29 +202,32 @@ async def analyse_starten(bg: BackgroundTasks):
     bg.add_task(abend_analyse)
     return {"message": "Analyse gestartet! Ca. 45 Sekunden..."}
 
-# FIX: Läuft jetzt synchron und gibt echte Ergebnisse zurück
 @app.post("/api/ergebnisse-pruefen")
 async def ergebnisse_pruefen():
     ergebnisse = await ergebnis_check()
     return {
-        "message": "Ergebnis-Check abgeschlossen!",
-        "aktualisiert": ergebnisse.get("aktualisiert", 0),
-        "gewonnen": ergebnisse.get("gewonnen", 0),
-        "verloren": ergebnisse.get("verloren", 0),
-        "tages_gv": ergebnisse.get("tages_gv", 0.0),
+        "message":           "Ergebnis-Check abgeschlossen!",
+        "aktualisiert":      ergebnisse.get("aktualisiert", 0),
+        "gewonnen":          ergebnisse.get("gewonnen", 0),
+        "verloren":          ergebnisse.get("verloren", 0),
+        "tages_gv":          ergebnisse.get("tages_gv", 0.0),
         "gesamt_ergebnisse": ergebnisse.get("gesamt_ergebnisse", 0),
-        "fehler": ergebnisse.get("fehler", None),
+        "fehler":            ergebnisse.get("fehler", None),
     }
 
 @app.get("/api/statistik")
-async def get_stats(): return get_statistik()
+async def get_stats():
+    return get_statistik()
 
 @app.get("/api/excel-download")
 async def excel_download():
-    if not os.path.exists(EXCEL_PATH): erstelle_excel()
-    return FileResponse(EXCEL_PATH,
+    if not os.path.exists(EXCEL_PATH):
+        erstelle_excel()
+    return FileResponse(
+        EXCEL_PATH,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        filename=f"Sportwetten_{date.today().strftime('%Y%m%d')}.xlsx")
+        filename=f"Sportwetten_{date.today().strftime('%Y%m%d')}.xlsx"
+    )
 
 @app.post("/api/drive-upload")
 async def drive_upload(bg: BackgroundTasks):
@@ -229,19 +244,27 @@ async def whatsapp_test():
 async def status():
     from whatsapp_agent import WHATSAPP_PHONE, WHATSAPP_API_KEY
     return {
-        "status": "online", "version": "2.2.0",
-        "uhrzeit": datetime.now().strftime("%d.%m.%Y %H:%M"),
-        "analyse_laeuft": _cache["analyse_laeuft"],
-        "letzter_lauf": _cache["letzter_lauf"],
-        "letzte_ergebnisse": _cache["letzte_ergebnisse"],
-        "excel_vorhanden": os.path.exists(EXCEL_PATH),
-        "drive_eingerichtet": os.path.exists(os.getenv("GDRIVE_TOKEN_FILE", "data/gdrive_token.json")),
+        "status":               "online",
+        "version":              "2.3.0",
+        "uhrzeit":              datetime.now().strftime("%d.%m.%Y %H:%M"),
+        "analyse_laeuft":       _cache["analyse_laeuft"],
+        "letzter_lauf":         _cache["letzter_lauf"],
+        "letzte_ergebnisse":    _cache["letzte_ergebnisse"],
+        "excel_vorhanden":      os.path.exists(EXCEL_PATH),
+        "drive_eingerichtet":   os.path.exists(os.getenv("GDRIVE_TOKEN_FILE", "data/gdrive_token.json")),
         "whatsapp_eingerichtet": bool(WHATSAPP_PHONE and WHATSAPP_API_KEY),
-        "startkapital": float(os.getenv("STARTKAPITAL", "1000")),
-        "max_risiko": float(os.getenv("MAX_RISIKO_PROZENT", "3")),
-        "naechste_analyse": "21:00 Uhr",
+        "startkapital":         float(os.getenv("STARTKAPITAL", "1000")),
+        "max_risiko":           float(os.getenv("MAX_RISIKO_PROZENT", "3")),
+        "naechste_analyse":     "21:00 Uhr",
         "naechster_ergebnis_check": "10:00 Uhr",
     }
+
+@app.post("/run-analysis")
+async def run_analysis(bg: BackgroundTasks):
+    if _cache["analyse_laeuft"]:
+        return {"message": "Läuft bereits..."}
+    bg.add_task(abend_analyse)
+    return {"message": "Analyse gestartet!"}
 
 if __name__ == "__main__":
     import uvicorn
