@@ -29,7 +29,7 @@ LIGA_IDS = {
     "Soccer Austria Bundesliga":   144,  # Austria Bundesliga
 }
 
-SAISON = "2024"
+SAISON = "2025"
 
 
 async def hole_team_id(team_name: str, liga_id: int) -> int | None:
