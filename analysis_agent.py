@@ -28,9 +28,7 @@ def berechne_kelly(kapital: float, prob: float, quote: float) -> float:
 
 
 def bereinige_json(text: str) -> str:
-    """Bereinigt die KI-Antwort und extrahiert valides JSON."""
     text = text.strip()
-    # Codeblöcke entfernen
     if "```" in text:
         parts = text.split("```")
         for part in parts:
@@ -40,7 +38,6 @@ def bereinige_json(text: str) -> str:
             if part.startswith("{"):
                 text = part
                 break
-    # Ersten { bis letzten } extrahieren
     start = text.find("{")
     end   = text.rfind("}")
     if start != -1 and end != -1:
@@ -56,22 +53,29 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
     if not spiele:
         return {"alle_empfehlungen": [], "top3": [], "zusammenfassung": "Keine Spiele verfügbar."}
 
-    # Value Bets vorberechnen – nur Top 5 an KI senden
     value_bets = analysiere_value_bets(spiele)
     top_value  = top_value_bets(value_bets, anzahl=5)
     anzahl_vb  = len(value_bets)
 
-    # Kompakter Prompt – nur das Nötigste
+    if not top_value:
+        return {
+            "alle_empfehlungen": [],
+            "top3": [],
+            "zusammenfassung": f"Keine Value Bets gefunden (EV-Filter).",
+            "value_bets_gesamt": 0,
+            "value_bets_roh": [],
+        }
+
     vb_liste = [
         {
-            "heim":       vb["heim"],
-            "gast":       vb["gast"],
-            "liga":       vb["liga"],
-            "zeit":       vb["zeit"],
-            "tipp":       vb["empfehlung"],
-            "quote":      vb["quote"],
-            "bookie":     vb["bookie"],
-            "ev":         vb["ev"],
+            "heim":   vb["heim"],
+            "gast":   vb["gast"],
+            "liga":   vb["liga"],
+            "zeit":   vb["zeit"],
+            "tipp":   vb["empfehlung"],
+            "quote":  vb["quote"],
+            "bookie": vb["bookie"],
+            "ev":     vb["ev"],
         }
         for vb in top_value
     ]
@@ -99,11 +103,14 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
         text = bereinige_json(msg.content[0].text)
         result = json.loads(text)
 
-        # Falls alle_empfehlungen leer, top5 reinkopieren
-        if not result.get("alle_empfehlungen"):
-            result["alle_empfehlungen"] = result.get("top3", [])
+        # ── FIX: nur Dictionaries durchlassen ────────────────────────────────
+        top3 = [emp for emp in result.get("top3", []) if isinstance(emp, dict)]
+        alle = [emp for emp in result.get("alle_empfehlungen", []) if isinstance(emp, dict)]
 
-        for emp in result.get("top3", []):
+        if not alle:
+            alle = top3
+
+        for emp in [e for e in top3 if isinstance(e, dict)]:
             kelly = berechne_kelly(kapital, emp.get("echte_wahrscheinlichkeit", 0), emp.get("quote", 0))
             ki_e  = emp.get("empfohlener_einsatz", kelly)
             emp["empfohlener_einsatz"] = round(min(float(ki_e or kelly), max_e), 2)
@@ -113,24 +120,29 @@ async def analysiere_spiele(spiele: list, aktuelles_kapital: float = None) -> di
                 emp["empfohlener_einsatz"] * emp.get("quote", 1) - emp["empfohlener_einsatz"], 2
             )
 
-        result["value_bets_gesamt"] = anzahl_vb
-        result["value_bets_roh"]    = top_value
-        return result
+        return {
+            "alle_empfehlungen":  alle,
+            "top3":               top3,
+            "zusammenfassung":    result.get("zusammenfassung", ""),
+            "value_bets_gesamt":  anzahl_vb,
+            "value_bets_roh":     top_value,
+        }
 
     except Exception as e:
         print(f"Analyse-Fehler: {e}")
-        # Fallback: direkt Top 3 aus Value Bets ohne KI
         fallback_top3 = []
         for vb in top_value[:3]:
+            if not isinstance(vb, dict):
+                continue
             einsatz = berechne_kelly(kapital, vb.get("implizite_wahrscheinlichkeit", 0.5), vb["quote"])
             fallback_top3.append({
                 **vb,
-                "konfidenz":               7,
-                "risiko":                  "Mittel",
-                "begruendung":             f"Value Bet: EV +{vb['ev']}% (Konsens-Methode)",
-                "empfohlener_einsatz":     einsatz,
+                "konfidenz":                7,
+                "risiko":                   "Mittel",
+                "begruendung":              f"Value Bet: EV +{vb['ev']}% (Konsens-Methode)",
+                "empfohlener_einsatz":      einsatz,
                 "echte_wahrscheinlichkeit": vb.get("implizite_wahrscheinlichkeit", 0),
-                "potenz_gewinn":           round(einsatz * vb["quote"] - einsatz, 2),
+                "potenz_gewinn":            round(einsatz * vb["quote"] - einsatz, 2),
             })
         return {
             "alle_empfehlungen": fallback_top3,
