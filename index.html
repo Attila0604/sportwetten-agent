@@ -4,151 +4,294 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#070b14">
 <title>⚽ Sportwetten KI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0d1117; --card: #161b22; --card2: #1c2330;
-  --border: #30363d; --text: #e6edf3; --muted: #8b949e;
-  --green: #2ecc71; --red: #e74c3c; --blue: #1a8fe3;
-  --gold: #f1c40f; --navy: #1a252f; --white: #ffffff;
-  --hellgrau: #f0f2f5;
+:root{
+  --bg:#070b14;--s:#0d1420;--c:#111827;--c2:#161f2e;
+  --border:#1e2d45;--border2:#243447;
+  --text:#f0f4ff;--muted:#6b7fa3;--muted2:#4a5568;
+  --green:#00d68f;--green2:#00b377;
+  --red:#ff4d6d;--red2:#cc3d57;
+  --blue:#3b82f6;--blue2:#2563eb;
+  --gold:#f59e0b;--gold2:#d97706;
+  --purple:#8b5cf6;
+  --cyan:#06b6d4;
+  --font:'Inter',sans-serif;
+  --radius:14px;--radius-sm:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
 /* HEADER */
-header{background:linear-gradient(135deg,#0d1117,#1a252f);border-bottom:2px solid var(--blue);padding:12px 16px 8px;position:sticky;top:0;z-index:100}
-.h-row1{display:flex;align-items:center;justify-content:space-between}
-.h-title{font-size:17px;font-weight:800;color:var(--text)}
-.h-title span{color:var(--blue)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:5px}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.h-row2{display:flex;align-items:center;gap:14px;margin-top:5px;font-size:11px;color:var(--muted)}
-.kapital-badge{background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.3);color:var(--green);padding:2px 10px;border-radius:20px;font-weight:700;font-size:12px}
+header{
+  background:linear-gradient(180deg,rgba(13,20,32,0.98) 0%,rgba(7,11,20,0.95) 100%);
+  border-bottom:1px solid var(--border);
+  padding:14px 20px 10px;
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(20px);
+}
+.h-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.h-logo{display:flex;align-items:center;gap:10px}
+.h-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 15px rgba(59,130,246,0.3)}
+.h-title{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.h-title span{background:linear-gradient(90deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.live-dot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);font-weight:600}
+.live-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.9)}}
+.h-row2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.h-chip{background:var(--c2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:5px}
+.h-chip .val{color:var(--text)}
+.h-chip.green{background:rgba(0,214,143,.1);border-color:rgba(0,214,143,.2);color:var(--green)}
 
 /* NAV */
-nav{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+nav{
+  background:var(--s);
+  border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;scrollbar-width:none;
+  padding:0 16px;
+}
 nav::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:70px;padding:11px 6px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab{
+  flex-shrink:0;padding:12px 16px;
+  font-size:11px;font-weight:600;font-family:var(--font);
+  color:var(--muted);cursor:pointer;border:none;background:none;
+  border-bottom:2px solid transparent;
+  transition:all .2s;letter-spacing:.02em;white-space:nowrap;
+}
 .tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.active){color:var(--text)}
 
 /* MAIN */
-main{padding:12px 12px 80px;max-width:960px;margin:0 auto}
-.page{display:none}
-.page.active{display:block}
+main{padding:16px 16px 100px;max-width:960px;margin:0 auto}
+.page{display:none}.page.active{display:block}
 
-/* CARDS */
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:12px}
-.card-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+/* CARD */
+.card{
+  background:var(--c);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;margin-bottom:14px;
+}
+.card-title{
+  font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:14px;display:flex;align-items:center;gap:6px;
+}
 
-/* KAPITAL BANNER */
-.kapital-banner{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
-@media(min-width:600px){.kapital-banner{grid-template-columns:repeat(4,1fr)}}
-.kp-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center}
-.kp-val{font-size:20px;font-weight:800;margin-bottom:3px}
-.kp-lbl{font-size:10px;color:var(--muted);font-weight:600}
-
-/* WETTE CARD */
-.wette-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue);transition:transform .15s}
-.wette-card:hover{transform:translateX(2px)}
-.wette-card.top3-card{border-left-color:var(--gold);background:linear-gradient(135deg,rgba(241,196,15,.05),var(--card2))}
-.wette-card.niedrig{border-left-color:var(--green)}
-.wette-card.hoch{border-left-color:var(--red)}
-
-.wh{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
-.wt{font-size:15px;font-weight:700}
-.wl{font-size:11px;color:var(--muted);margin-top:2px}
-.wq{font-size:24px;font-weight:900;color:var(--blue);white-space:nowrap}
-
-.wdet{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-@media(min-width:500px){.wdet{grid-template-columns:repeat(5,1fr)}}
-.di{text-align:center}
-.dl{font-size:10px;color:var(--muted)}
-.dv{font-size:13px;font-weight:700;margin-top:2px}
-
-.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:5px}
-.bg{background:rgba(46,204,113,.2);color:var(--green)}
-.br{background:rgba(231,76,60,.2);color:var(--red)}
-.by{background:rgba(241,196,15,.2);color:var(--gold)}
-.bb{background:rgba(26,143,227,.2);color:var(--blue)}
-.bgold{background:rgba(241,196,15,.25);color:var(--gold);border:1px solid rgba(241,196,15,.4)}
-
-.einsatz-box{background:rgba(26,143,227,.1);border:1px solid rgba(26,143,227,.25);border-radius:8px;padding:10px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
-.eb-item{text-align:center}
-.eb-lbl{font-size:10px;color:var(--muted)}
-.eb-val{font-size:14px;font-weight:800;margin-top:2px}
-
-.begr{font-size:12px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.03);border-radius:6px;line-height:1.5}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
-.btn-p{background:var(--blue);color:#fff}
-.btn-p:hover{background:#1a7fd4}
-.btn-s{background:var(--green);color:#fff}
-.btn-o{background:transparent;color:var(--blue);border:1px solid var(--blue)}
-.btn-full{width:100%;justify-content:center}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-sm{padding:6px 12px;font-size:11px}
-
-/* ANALYSE BAR */
-.abar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.ainfo{font-size:12px;color:var(--muted)}
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+@media(min-width:600px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
+.kpi-card{
+  background:var(--c2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;
+  position:relative;overflow:hidden;
+}
+.kpi-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+}
+.kpi-card.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.kpi-card.red::before{background:linear-gradient(90deg,var(--red),var(--red2))}
+.kpi-card.green::before{background:linear-gradient(90deg,var(--green),var(--green2))}
+.kpi-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.kpi-val{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;line-height:1}
+.kpi-lbl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
 
 /* ZUSAMMENFASSUNG */
-.zs{background:linear-gradient(135deg,rgba(26,143,227,.08),rgba(46,204,113,.08));border:1px solid rgba(26,143,227,.25);border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.6}
+.zs{
+  background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(6,182,212,.06));
+  border:1px solid rgba(59,130,246,.2);
+  border-radius:var(--radius);padding:16px;margin-bottom:16px;
+  font-size:13px;line-height:1.7;color:var(--text);
+  position:relative;
+}
+.zs::before{content:'💬';margin-right:8px}
+
+/* ANALYSE BAR */
+.abar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.ainfo{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+
+/* WETTE CARD */
+.wette-card{
+  background:var(--c2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:10px;
+  border-left:3px solid var(--border2);
+  transition:all .2s;cursor:default;
+  position:relative;overflow:hidden;
+}
+.wette-card:hover{border-color:var(--border2);background:#192030;transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.wette-card.top3-card{
+  border-left-color:var(--gold);
+  background:linear-gradient(135deg,rgba(245,158,11,.05) 0%,var(--c2) 50%);
+}
+.wette-card.niedrig{border-left-color:var(--green)}
+.wette-card.hoch{border-left-color:var(--red)}
+.wette-card.mittel{border-left-color:var(--blue)}
+
+.wh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.wt{font-size:15px;font-weight:700;letter-spacing:-.2px;line-height:1.3}
+.wl{font-size:11px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:4px}
+.wq{
+  font-size:26px;font-weight:900;color:var(--blue);
+  white-space:nowrap;letter-spacing:-.5px;
+  text-shadow:0 0 20px rgba(59,130,246,.3);
+}
+
+/* BADGES */
+.badge{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:3px 10px;border-radius:20px;
+  font-size:10px;font-weight:700;letter-spacing:.03em;margin-right:5px;
+}
+.bg{background:rgba(0,214,143,.12);color:var(--green);border:1px solid rgba(0,214,143,.2)}
+.br{background:rgba(255,77,109,.12);color:var(--red);border:1px solid rgba(255,77,109,.2)}
+.by{background:rgba(245,158,11,.12);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+.bb{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.bgold{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+
+/* WETTE DETAILS */
+.wdet{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;
+}
+@media(min-width:480px){.wdet{grid-template-columns:repeat(5,1fr)}}
+.di{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:8px;text-align:center;
+}
+.dl{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.dv{font-size:13px;font-weight:700;margin-top:3px}
+
+/* EINSATZ BOX */
+.einsatz-box{
+  background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);
+  border-radius:var(--radius-sm);padding:12px;margin-top:12px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+}
+@media(min-width:480px){.einsatz-box{grid-template-columns:repeat(5,1fr)}}
+.eb-item{text-align:center}
+.eb-lbl{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.eb-val{font-size:14px;font-weight:800;margin-top:4px;letter-spacing:-.3px}
+
+/* BEGRÜNDUNG */
+.begr{
+  font-size:12px;color:var(--muted);line-height:1.6;
+  margin-top:10px;padding:10px 12px;
+  background:rgba(255,255,255,.02);border-radius:var(--radius-sm);
+  border-left:2px solid var(--border2);
+}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 18px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;font-family:var(--font);
+  cursor:pointer;border:none;transition:all .2s;text-decoration:none;
+  letter-spacing:.01em;
+}
+.btn-p{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 4px 15px rgba(59,130,246,.3)}
+.btn-p:hover{box-shadow:0 6px 20px rgba(59,130,246,.4);transform:translateY(-1px)}
+.btn-s{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;box-shadow:0 4px 15px rgba(0,214,143,.25)}
+.btn-o{background:transparent;color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.btn-o:hover{background:rgba(59,130,246,.08)}
+.btn-full{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.btn-sm{padding:7px 14px;font-size:11px}
 
 /* LOADING */
-.loading{text-align:center;padding:40px;color:var(--muted)}
-.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+.loading{text-align:center;padding:48px 20px;color:var(--muted)}
+.spinner{
+  width:36px;height:36px;
+  border:2px solid var(--border);border-top-color:var(--blue);
+  border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* EMPTY */
-.empty{text-align:center;padding:45px 20px;color:var(--muted)}
-.empty .icon{font-size:48px;margin-bottom:12px}
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty .icon{font-size:52px;margin-bottom:14px;opacity:.6}
+.empty p{font-size:14px;line-height:1.8}
 
 /* TABLE */
-.tw{overflow-x:auto}
+.tw{overflow-x:auto;border-radius:var(--radius-sm);margin-top:4px}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:var(--card2);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:10px 8px;text-align:left;font-weight:700;border-bottom:1px solid var(--border)}
-td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+th{
+  background:var(--c2);color:var(--muted);
+  font-size:9px;text-transform:uppercase;letter-spacing:.06em;
+  padding:11px 10px;text-align:left;font-weight:700;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(255,255,255,.02)}
 
-/* FORM */
-.fg{margin-bottom:12px}
-.fl{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
-.fi{width:100%;padding:10px 12px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px}
-.fi:focus{outline:none;border-color:var(--blue)}
-.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* STATUS BADGE */
+.status-badge{
+  display:inline-block;padding:3px 9px;border-radius:20px;
+  font-size:10px;font-weight:700;
+}
+.s-won{background:rgba(0,214,143,.15);color:var(--green);border:1px solid rgba(0,214,143,.25)}
+.s-lost{background:rgba(255,77,109,.15);color:var(--red);border:1px solid rgba(255,77,109,.25)}
+.s-open{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.25)}
+
+/* DRIVE */
+.drive-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700}
+.drive-ok{background:rgba(0,214,143,.12);color:var(--green);border:1px solid rgba(0,214,143,.25)}
+.drive-no{background:rgba(255,77,109,.12);color:var(--red);border:1px solid rgba(255,77,109,.25)}
+
+/* INFO ROW */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-row .lbl{color:var(--muted);font-size:12px}
 
 /* TOAST */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;display:none;min-width:220px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.6)}
-.toast.show{display:block;animation:fiu .3s}
-@keyframes fiu{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--c2);border:1px solid var(--border2);
+  border-radius:var(--radius-sm);padding:12px 22px;
+  font-size:13px;font-weight:500;z-index:999;
+  display:none;min-width:240px;text-align:center;
+  box-shadow:0 16px 48px rgba(0,0,0,.6);opacity:0;
+  transition:all .3s;
+}
+.toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* PLATZ BADGE */
+.platz-badge{
+  width:28px;height:28px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;flex-shrink:0;
+}
+.p1{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;box-shadow:0 4px 12px rgba(245,158,11,.4)}
+.p2{background:linear-gradient(135deg,#94a3b8,#64748b);color:#000}
+.p3{background:linear-gradient(135deg,#cd7c3a,#b45309);color:#fff}
 
 /* ANALYSE TEXT */
-.analyse-text{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;background:rgba(255,255,255,.02);padding:12px;border-radius:8px;border:1px solid var(--border)}
+.analyse-text{font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;padding:14px;background:rgba(255,255,255,.02);border-radius:var(--radius-sm);border:1px solid var(--border)}
 
-/* DRIVE STATUS */
-.drive-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
-.drive-ok{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.3)}
-.drive-no{background:rgba(231,76,60,.15);color:var(--red);border:1px solid rgba(231,76,60,.3)}
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+@media(max-width:480px){.wq{font-size:22px}.kpi-val{font-size:18px}}
 </style>
 </head>
 <body>
 
 <header>
   <div class="h-row1">
-    <div class="h-title">⚽ <span>Sportwetten</span> KI Agent</div>
-    <div style="font-size:11px;color:var(--muted)">
-      <span class="dot"></span><span id="htime">–</span>
+    <div class="h-logo">
+      <div class="h-logo-icon">⚽</div>
+      <div class="h-title">Sport<span>wetten</span> KI</div>
     </div>
+    <div class="live-dot" id="htime">–</div>
   </div>
   <div class="h-row2">
-    <span>💰 Kapital: <span class="kapital-badge" id="h-kapital">–</span></span>
-    <span>🎯 Max/Wette: <span id="h-max">–</span></span>
-    <span>📅 <span id="h-datum">–</span></span>
+    <div class="h-chip green">💰 <span class="val" id="h-kapital">–</span></div>
+    <div class="h-chip">🎯 Max <span class="val" id="h-max">–</span></div>
+    <div class="h-chip">📅 <span class="val" id="h-datum">–</span></div>
   </div>
 </header>
 
@@ -158,16 +301,16 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <button class="tab" onclick="showPage('statistik',this)">📊 Statistik</button>
   <button class="tab" onclick="showPage('verlauf',this)">📋 Verlauf</button>
   <button class="tab" onclick="showPage('analyse',this)">📈 Analysen</button>
-  <button class="tab" onclick="showPage('excel',this)">📥 Drive</button>
+  <button class="tab" onclick="showPage('excel',this)">☁️ Drive</button>
 </nav>
 
 <main>
 
-<!-- ── HEUTE ─────────────────────────────────────────── -->
+<!-- ══ HEUTE ══ -->
 <div class="page active" id="page-heute">
   <div class="abar">
-    <div class="ainfo" id="letzter-lauf">🌙 Täglich 23:00 Uhr automatisch</div>
-    <button class="btn btn-p" onclick="analyseStarten()" id="btn-analyse">🔍 Analysieren</button>
+    <div class="ainfo">🌙 <span id="letzter-lauf">Täglich 21:00 Uhr</span></div>
+    <button class="btn btn-p btn-sm" onclick="analyseStarten()" id="btn-analyse">🔍 Analysieren</button>
   </div>
   <div id="zs-box"></div>
   <div id="alle-empf">
@@ -175,11 +318,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
-<!-- ── TOP 3 ──────────────────────────────────────────── -->
+<!-- ══ TOP 3 ══ -->
 <div class="page" id="page-top3">
-  <div class="card" style="background:linear-gradient(135deg,rgba(241,196,15,.08),var(--card));border-color:rgba(241,196,15,.3)">
+  <div class="card" style="border-color:rgba(245,158,11,.2);background:linear-gradient(135deg,rgba(245,158,11,.04),var(--c))">
     <div class="card-title">⭐ TOP 3 — Heute automatisch eingetragen</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7">
       Diese 3 Wetten wurden von der KI ausgewählt und automatisch in deine Excel-Tabelle eingetragen.
       Einsatz nach halbem Kelly-Kriterium (max. 3% des Kapitals).
     </p>
@@ -189,15 +332,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
-<!-- ── STATISTIK ──────────────────────────────────────── -->
+<!-- ══ STATISTIK ══ -->
 <div class="page" id="page-statistik">
-  <div class="kapital-banner" id="kp-banner">
+  <div class="kpi-grid" id="kp-banner">
     <div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div>
   </div>
   <div id="stats-detail"></div>
 </div>
 
-<!-- ── VERLAUF ────────────────────────────────────────── -->
+<!-- ══ VERLAUF ══ -->
 <div class="page" id="page-verlauf">
   <div class="card">
     <div class="card-title">📋 Letzte Wetten</div>
@@ -207,59 +350,55 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
-<!-- ── ANALYSEN ───────────────────────────────────────── -->
+<!-- ══ ANALYSEN ══ -->
 <div class="page" id="page-analyse">
   <div class="card">
     <div class="card-title">📅 Wochenanalyse</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Automatisch jeden Montag 07:00 Uhr</p>
-    <button class="btn btn-o btn-sm" onclick="analyseJetzt('woche')">Jetzt erstellen</button>
-    <div id="wochen-analyse" style="margin-top:12px"></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Automatisch jeden Montag 07:00 Uhr</p>
+    <button class="btn btn-o btn-sm" onclick="analyseJetzt('woche')">▶ Jetzt erstellen</button>
+    <div id="wochen-analyse" style="margin-top:14px"></div>
   </div>
   <div class="card">
     <div class="card-title">🗓️ Monatsanalyse</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Automatisch am 1. jeden Monats 08:00 Uhr</p>
-    <button class="btn btn-o btn-sm" onclick="analyseJetzt('monat')">Jetzt erstellen</button>
-    <div id="monats-analyse" style="margin-top:12px"></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Automatisch am 1. jeden Monats 08:00 Uhr</p>
+    <button class="btn btn-o btn-sm" onclick="analyseJetzt('monat')">▶ Jetzt erstellen</button>
+    <div id="monats-analyse" style="margin-top:14px"></div>
   </div>
 </div>
 
-<!-- ── EXCEL & DRIVE ──────────────────────────────────── -->
+<!-- ══ DRIVE ══ -->
 <div class="page" id="page-excel">
   <div class="card">
-    <div class="card-title">📁 Google Drive</div>
-    <div style="margin-bottom:14px">
+    <div class="card-title">☁️ Google Drive</div>
+    <div style="margin-bottom:16px">
       <span id="drive-status" class="drive-badge drive-no">⏳ Prüfe...</span>
     </div>
-    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">
+    <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:16px">
       📂 Ordner: <strong style="color:var(--text)">Sportwetten durch KI Multi Agent</strong><br>
       🔄 Automatisch täglich nach der Analyse hochgeladen<br>
       📊 Enthält immer die aktuellste Excel-Datei
-    </p>
-    <button class="btn btn-p btn-full" onclick="driveUpload()">
-      ☁️ Jetzt zu Google Drive hochladen
-    </button>
-    <div style="margin-top:10px">
-      <a class="btn btn-o btn-full" href="/api/excel-download">
-        📥 Direkt herunterladen (.xlsx)
-      </a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-p btn-full" onclick="driveUpload()">☁️ Jetzt zu Google Drive hochladen</button>
+      <a class="btn btn-o btn-full" href="/api/excel-download">📥 Direkt herunterladen (.xlsx)</a>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">📊 Excel Sheets</div>
     <div style="font-size:13px;line-height:2;color:var(--muted)">
-      📊 <strong style="color:var(--text)">Empfehlungen</strong> — alle KI-Value Bets<br>
-      🎯 <strong style="color:var(--text)">Meine Wetten</strong> — Top 3 auto-eingetragen<br>
-      💰 <strong style="color:var(--text)">Kapital</strong> — Kapitalverlauf täglich<br>
-      📅 <strong style="color:var(--text)">Wochenanalyse</strong> — KI Wochenbericht<br>
-      🗓️ <strong style="color:var(--text)">Monatsanalyse</strong> — KI Monatsbericht<br>
-      📈 <strong style="color:var(--text)">Statistik</strong> — Formeln & Kennzahlen
+      <div class="info-row"><span>📊 <strong style="color:var(--text)">Empfehlungen</strong></span><span class="badge bg">Alle Value Bets</span></div>
+      <div class="info-row"><span>🎯 <strong style="color:var(--text)">Meine Wetten</strong></span><span class="badge bgold">Top 3 Auto</span></div>
+      <div class="info-row"><span>💰 <strong style="color:var(--text)">Kapitalverlauf</strong></span><span class="badge bb">Täglich</span></div>
+      <div class="info-row"><span>📅 <strong style="color:var(--text)">Wochenanalyse</strong></span><span class="badge by">KI Bericht</span></div>
+      <div class="info-row"><span>🗓️ <strong style="color:var(--text)">Monatsanalyse</strong></span><span class="badge by">KI Bericht</span></div>
+      <div class="info-row"><span>📈 <strong style="color:var(--text)">Statistik</strong></span><span class="badge bg">Kennzahlen</span></div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">⚙️ System Info</div>
-    <div id="sys-info" style="font-size:13px;line-height:1.9;color:var(--muted)">Lade...</div>
+    <div id="sys-info"><div class="loading" style="padding:20px"><div class="spinner"></div></div></div>
   </div>
 </div>
 
@@ -267,14 +406,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <div class="toast" id="toast"></div>
 
 <script>
-let _data = {};
-let _stats = {};
+let _data = {}, _stats = {};
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('h-datum').textContent =
     new Date().toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit',year:'numeric'});
   tick();
-  setInterval(tick, 60000);
+  setInterval(tick, 30000);
   ladeAlles();
   ladeStatus();
 });
@@ -295,7 +433,7 @@ function showPage(name, btn) {
   if (name === 'excel') ladeStatus();
 }
 
-// ── LADEN ──────────────────────────────────────────────────────────
+// ══ API ══
 async function ladeAlles() {
   try {
     const res = await fetch('/api/empfehlungen');
@@ -324,28 +462,25 @@ async function ladeStatus() {
   try {
     const res = await fetch('/api/status');
     const s = await res.json();
-    document.getElementById('h-kapital').textContent = s.startkapital.toFixed(0) + '€';
-    document.getElementById('h-max').textContent = (s.startkapital * s.max_risiko / 100).toFixed(2) + '€';
-    document.getElementById('drive-status').className =
-      'drive-badge ' + (s.drive_eingerichtet ? 'drive-ok' : 'drive-no');
-    document.getElementById('drive-status').textContent =
-      s.drive_eingerichtet ? '✅ Google Drive verbunden' : '⚠️ Google Drive nicht eingerichtet';
+    document.getElementById('h-kapital').textContent = (s.startkapital||1000).toFixed(0) + '€';
+    document.getElementById('h-max').textContent = ((s.startkapital||1000) * (s.max_risiko||3) / 100).toFixed(2) + '€';
+    document.getElementById('drive-status').className = 'drive-badge ' + (s.drive_eingerichtet ? 'drive-ok' : 'drive-no');
+    document.getElementById('drive-status').textContent = s.drive_eingerichtet ? '✅ Google Drive verbunden' : '⚠️ Nicht eingerichtet';
     document.getElementById('sys-info').innerHTML = `
-      🟢 Status: <strong style="color:var(--green)">Online</strong><br>
-      ⏰ Serverzeit: <strong>${s.uhrzeit}</strong><br>
-      🌙 Nächste Analyse: <strong>23:00 Uhr</strong><br>
-      📅 Wochenanalyse: <strong>Montag 07:00</strong><br>
-      🗓️ Monatsanalyse: <strong>1. d. Monats 08:00</strong><br>
-      💰 Startkapital: <strong>${s.startkapital}€</strong><br>
-      🎯 Max. Risiko: <strong>${s.max_risiko}% pro Wette</strong><br>
-      📊 Excel: <strong style="color:${s.excel_vorhanden?'var(--green)':'var(--red)'}">
-        ${s.excel_vorhanden?'Vorhanden':'Fehlt'}</strong><br>
-      ☁️ Drive: <strong style="color:${s.drive_eingerichtet?'var(--green)':'var(--red)'}">
-        ${s.drive_eingerichtet?'Eingerichtet':'Nicht eingerichtet'}</strong>`;
+      <div class="info-row"><span class="lbl">Status</span><span style="color:var(--green);font-weight:700">🟢 Online</span></div>
+      <div class="info-row"><span class="lbl">Serverzeit</span><span>${s.uhrzeit||'—'}</span></div>
+      <div class="info-row"><span class="lbl">Nächste Analyse</span><span style="color:var(--gold)">21:00 Uhr</span></div>
+      <div class="info-row"><span class="lbl">Wochenanalyse</span><span>Montag 07:00</span></div>
+      <div class="info-row"><span class="lbl">Startkapital</span><span style="font-weight:700">${s.startkapital||1000}€</span></div>
+      <div class="info-row"><span class="lbl">Max. Risiko</span><span>${s.max_risiko||3}% pro Wette</span></div>
+      <div class="info-row"><span class="lbl">Excel</span><span style="color:${s.excel_vorhanden?'var(--green)':'var(--red)'}">
+        ${s.excel_vorhanden?'✅ Vorhanden':'❌ Fehlt'}</span></div>
+      <div class="info-row"><span class="lbl">Google Drive</span><span style="color:${s.drive_eingerichtet?'var(--green)':'var(--red)'}">
+        ${s.drive_eingerichtet?'✅ Verbunden':'❌ Nicht eingerichtet'}</span></div>`;
   } catch(e) {}
 }
 
-// ── RENDER HEUTE ───────────────────────────────────────────────────
+// ══ RENDER HEUTE ══
 function renderHeuteSeite() {
   if (_data.letzter_lauf) {
     const d = new Date(_data.letzter_lauf);
@@ -354,7 +489,7 @@ function renderHeuteSeite() {
   }
   const zs = document.getElementById('zs-box');
   if (_data.zusammenfassung) {
-    zs.innerHTML = `<div class="zs">💬 ${_data.zusammenfassung}</div>`;
+    zs.innerHTML = `<div class="zs">${_data.zusammenfassung}</div>`;
   }
   const liste = document.getElementById('alle-empf');
   const alle = _data.alle_empfehlungen || [];
@@ -363,146 +498,174 @@ function renderHeuteSeite() {
   if (!alle.length) {
     liste.innerHTML = `<div class="empty">
       <div class="icon">🌙</div>
-      <p>Noch keine Analyse für heute.<br>Täglich automatisch um <strong>23:00 Uhr</strong>.</p>
-      <br><button class="btn btn-p" onclick="analyseStarten()">🔍 Jetzt analysieren</button>
+      <p>Noch keine Analyse für heute.<br>Täglich automatisch um <strong style="color:var(--text)">21:00 Uhr</strong>.</p>
+      <br><br><button class="btn btn-p" onclick="analyseStarten()">🔍 Jetzt analysieren</button>
     </div>`;
     return;
   }
   liste.innerHTML = alle.map(e => renderCard(e, top3ids.has(e.spiel_id))).join('');
 }
 
-// ── RENDER TOP 3 ───────────────────────────────────────────────────
+// ══ RENDER TOP 3 ══
 function renderTop3() {
   const top3 = _data.top3 || [];
   const el = document.getElementById('top3-liste');
   if (!top3.length) {
-    el.innerHTML = '<div class="empty"><div class="icon">⭐</div><p>Heute noch keine Top 3.<br>Analyse läuft um 23:00 Uhr.</p></div>';
+    el.innerHTML = '<div class="empty"><div class="icon">⭐</div><p>Heute noch keine Top 3.<br>Analyse läuft um 21:00 Uhr.</p></div>';
     return;
   }
-  el.innerHTML = top3.map((e, i) => `
-    <div class="wette-card top3-card" style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span class="badge bgold">⭐ Platz ${i+1}</span>
+  const platzIcons = ['p1','p2','p3'];
+  el.innerHTML = top3.map((e, i) => {
+    const heim  = e.heim  || e.home_team  || e.heimteam  || '—';
+    const gast  = e.gast  || e.away_team  || e.gastteam  || '—';
+    const liga  = e.liga  || e.league     || e.liga_name || '—';
+    const quote = e.quote || e.odds       || '—';
+    const risiko= e.risiko|| e.risk       || '—';
+    const ev    = (e.ev||0)*100;
+    const empf  = e.empfehlung || e.tip   || '—';
+    return `
+    <div class="wette-card top3-card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="platz-badge ${platzIcons[i]||''}">${i+1}</div>
+          <span class="badge bgold">⭐ Platz ${i+1}</span>
+        </div>
         <span style="font-size:11px;color:var(--muted)">🕐 ${e.zeit||''}</span>
       </div>
       <div class="wh">
         <div>
-          <div class="wt">${e.heim} vs ${e.gast}</div>
-          <div class="wl">🏆 ${e.liga}</div>
+          <div class="wt">${heim} vs ${gast}</div>
+          <div class="wl">🏆 ${liga}</div>
         </div>
-        <div class="wq">${e.quote}</div>
+        <div class="wq">${quote}</div>
       </div>
-      <div>
-        <span class="badge bb">▶ ${e.empfehlung}</span>
-        <span class="badge ${e.risiko==='Niedrig'?'bg':e.risiko==='Hoch'?'br':'by'}">${e.risiko||'Mittel'}</span>
+      <div style="margin-bottom:4px">
+        <span class="badge bb">▶ ${empf}</span>
+        <span class="badge ${risiko==='Niedrig'?'bg':risiko==='Hoch'?'br':'by'}">${risiko}</span>
       </div>
       <div class="einsatz-box">
         <div class="eb-item">
-          <div class="eb-lbl">EMPF. EINSATZ</div>
+          <div class="eb-lbl">Empf. Einsatz</div>
           <div class="eb-val" style="color:var(--gold)">${(e.empfohlener_einsatz||0).toFixed(2)}€</div>
         </div>
         <div class="eb-item">
-          <div class="eb-lbl">KELLY EINSATZ</div>
+          <div class="eb-lbl">Kelly Einsatz</div>
           <div class="eb-val" style="color:var(--blue)">${(e.kelly_einsatz||0).toFixed(2)}€</div>
         </div>
         <div class="eb-item">
-          <div class="eb-lbl">MAX (3%)</div>
+          <div class="eb-lbl">Max (3%)</div>
           <div class="eb-val" style="color:var(--muted)">${(e.max_einsatz||0).toFixed(2)}€</div>
         </div>
         <div class="eb-item">
-          <div class="eb-lbl">POT. GEWINN</div>
+          <div class="eb-lbl">Pot. Gewinn</div>
           <div class="eb-val" style="color:var(--green)">+${(e.potenz_gewinn||0).toFixed(2)}€</div>
         </div>
         <div class="eb-item">
-          <div class="eb-lbl">EV</div>
-          <div class="eb-val" style="color:${e.ev>0?'var(--green)':'var(--red)'}">+${(e.ev*100).toFixed(1)}%</div>
+          <div class="eb-lbl">EV%</div>
+          <div class="eb-val" style="color:${ev>0?'var(--green)':'var(--red)'}">+${ev.toFixed(1)}%</div>
         </div>
       </div>
       ${e.einsatz_begruendung?`<div class="begr">🧮 ${e.einsatz_begruendung}</div>`:''}
       ${e.begruendung?`<div class="begr">💡 ${e.begruendung}</div>`:''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-// ── RENDER WETTE CARD ──────────────────────────────────────────────
+// ══ RENDER CARD ══
 function renderCard(emp, istTop3) {
-  const ev = (emp.ev*100).toFixed(2);
-  const rk = (emp.risiko||'').toLowerCase();
+  const heim  = emp.heim  || emp.home_team  || emp.heimteam  || '—';
+  const gast  = emp.gast  || emp.away_team  || emp.gastteam  || '—';
+  const liga  = emp.liga  || emp.league     || emp.liga_name || '—';
+  const quote = emp.quote || emp.odds       || '—';
+  const empf  = emp.empfehlung || emp.tip   || '—';
+  const risiko= (emp.risiko||'').toLowerCase();
+  const ev    = (emp.ev||0)*100;
   return `
-  <div class="wette-card ${rk} ${istTop3?'top3-card':''}">
+  <div class="wette-card ${risiko} ${istTop3?'top3-card':''}">
     <div class="wh">
       <div>
-        <div class="wt">${emp.heim} vs ${emp.gast}</div>
-        <div class="wl">🏆 ${emp.liga} | 🕐 ${emp.zeit||''}</div>
+        <div class="wt">${heim} vs ${gast}</div>
+        <div class="wl">🏆 ${liga} ${emp.zeit?'· 🕐 '+emp.zeit:''}</div>
       </div>
-      <div class="wq">${emp.quote}</div>
+      <div class="wq">${quote}</div>
     </div>
-    <div>
+    <div style="margin-bottom:4px">
       ${istTop3?'<span class="badge bgold">⭐ Top 3</span>':''}
-      <span class="badge bb">▶ ${emp.empfehlung}</span>
+      <span class="badge bb">▶ ${empf}</span>
       <span class="badge ${emp.risiko==='Niedrig'?'bg':emp.risiko==='Hoch'?'br':'by'}">${emp.risiko||''}</span>
     </div>
     <div class="wdet">
-      <div class="di"><div class="dl">EV%</div>
-        <div class="dv" style="color:${emp.ev>0?'var(--green)':'var(--red)'}">+${ev}%</div></div>
-      <div class="di"><div class="dl">Impl.W.</div>
-        <div class="dv">${((emp.implizite_wahrscheinlichkeit||0)*100).toFixed(1)}%</div></div>
-      <div class="di"><div class="dl">Echt.W.</div>
-        <div class="dv" style="color:var(--blue)">${((emp.echte_wahrscheinlichkeit||0)*100).toFixed(1)}%</div></div>
-      <div class="di"><div class="dl">Konfidenz</div>
-        <div class="dv">${emp.konfidenz||0}/10</div></div>
-      <div class="di"><div class="dl">Risiko</div>
-        <div class="dv">${emp.risiko||'–'}</div></div>
+      <div class="di">
+        <div class="dl">EV%</div>
+        <div class="dv" style="color:${ev>0?'var(--green)':'var(--red)'}">+${ev.toFixed(1)}%</div>
+      </div>
+      <div class="di">
+        <div class="dl">Impl.W.</div>
+        <div class="dv">${((emp.implizite_wahrscheinlichkeit||0)*100).toFixed(1)}%</div>
+      </div>
+      <div class="di">
+        <div class="dl">Echt.W.</div>
+        <div class="dv" style="color:var(--blue)">${((emp.echte_wahrscheinlichkeit||0)*100).toFixed(1)}%</div>
+      </div>
+      <div class="di">
+        <div class="dl">Konfidenz</div>
+        <div class="dv">${emp.konfidenz||0}/10</div>
+      </div>
+      <div class="di">
+        <div class="dl">Risiko</div>
+        <div class="dv">${emp.risiko||'–'}</div>
+      </div>
     </div>
     ${emp.begruendung?`<div class="begr">💡 ${emp.begruendung}</div>`:''}
   </div>`;
 }
 
-// ── STATISTIK ──────────────────────────────────────────────────────
+// ══ STATISTIK ══
 function renderStatistik() {
   const s = _stats;
-  const gv = s.gesamt_gv || 0;
+  const gv  = s.gesamt_gv || 0;
   const roi = s.roi || 0;
   const kapital = s.aktuelles_kapital || s.startkapital || 1000;
 
   document.getElementById('kp-banner').innerHTML = `
-    <div class="kp-card">
-      <div class="kp-val" style="color:var(--gold)">${kapital.toFixed(2)}€</div>
-      <div class="kp-lbl">💰 Aktuelles Kapital</div>
+    <div class="kpi-card gold">
+      <div class="kpi-val" style="color:var(--gold)">${kapital.toFixed(2)}€</div>
+      <div class="kpi-lbl">💰 Aktuelles Kapital</div>
     </div>
-    <div class="kp-card">
-      <div class="kp-val" style="color:${roi>=0?'var(--green)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(2)}%</div>
-      <div class="kp-lbl">📈 ROI</div>
+    <div class="kpi-card ${roi>=0?'green':'red'}">
+      <div class="kpi-val" style="color:${roi>=0?'var(--green)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(2)}%</div>
+      <div class="kpi-lbl">📈 ROI</div>
     </div>
-    <div class="kp-card">
-      <div class="kp-val" style="color:${gv>=0?'var(--green)':'var(--red)'}">${gv>=0?'+':''}${gv.toFixed(2)}€</div>
-      <div class="kp-lbl">💵 Gesamt G/V</div>
+    <div class="kpi-card ${gv>=0?'green':'red'}">
+      <div class="kpi-val" style="color:${gv>=0?'var(--green)':'var(--red)'}">${gv>=0?'+':''}${gv.toFixed(2)}€</div>
+      <div class="kpi-lbl">💵 Gesamt G/V</div>
     </div>
-    <div class="kp-card">
-      <div class="kp-val">${s.trefferquote||0}%</div>
-      <div class="kp-lbl">🎯 Trefferquote</div>
+    <div class="kpi-card blue">
+      <div class="kpi-val" style="color:var(--blue)">${s.trefferquote||0}%</div>
+      <div class="kpi-lbl">🎯 Trefferquote</div>
     </div>`;
 
   document.getElementById('stats-detail').innerHTML = `
     <div class="card">
       <div class="card-title">📊 Detailstatistik</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
-        <div><div style="color:var(--muted);font-size:10px">GESAMT WETTEN</div>
-          <div style="font-size:20px;font-weight:800">${s.gesamt_wetten||0}</div></div>
-        <div><div style="color:var(--muted);font-size:10px">GEWONNEN</div>
-          <div style="font-size:20px;font-weight:800;color:var(--green)">${s.gewonnen||0}</div></div>
-        <div><div style="color:var(--muted);font-size:10px">VERLOREN</div>
-          <div style="font-size:20px;font-weight:800;color:var(--red)">${s.verloren||0}</div></div>
-        <div><div style="color:var(--muted);font-size:10px">OFFEN</div>
-          <div style="font-size:20px;font-weight:800;color:var(--gold)">${s.offen||0}</div></div>
-        <div><div style="color:var(--muted);font-size:10px">STARTKAPITAL</div>
-          <div style="font-size:18px;font-weight:700">${(s.startkapital||1000).toFixed(2)}€</div></div>
-        <div><div style="color:var(--muted);font-size:10px">GESAMT EINSATZ</div>
-          <div style="font-size:18px;font-weight:700">${(s.gesamt_einsatz||0).toFixed(2)}€</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${[
+          ['GESAMT WETTEN', s.gesamt_wetten||0, 'var(--text)'],
+          ['GEWONNEN', s.gewonnen||0, 'var(--green)'],
+          ['VERLOREN', s.verloren||0, 'var(--red)'],
+          ['OFFEN', s.offen||0, 'var(--gold)'],
+          ['STARTKAPITAL', (s.startkapital||1000).toFixed(2)+'€', 'var(--text)'],
+          ['GESAMT EINSATZ', (s.gesamt_einsatz||0).toFixed(2)+'€', 'var(--text)'],
+        ].map(([l,v,c])=>`
+        <div style="background:var(--c2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px">
+          <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">${l}</div>
+          <div style="font-size:22px;font-weight:800;color:${c};letter-spacing:-.5px">${v}</div>
+        </div>`).join('')}
       </div>
     </div>`;
 }
 
-// ── VERLAUF ────────────────────────────────────────────────────────
+// ══ VERLAUF ══
 function renderVerlauf() {
   const wetten = _stats.letzte_wetten || [];
   const el = document.getElementById('verlauf-table');
@@ -517,22 +680,23 @@ function renderVerlauf() {
     </tr></thead>
     <tbody>${wetten.map(w => {
       const gv = w.gewinn_verlust||0;
-      const sc = w.status==='Gewonnen'?'color:var(--green);font-weight:700':
-                 w.status==='Verloren'?'color:var(--red);font-weight:700':'color:var(--gold)';
+      const sc = w.status==='Gewonnen'?'s-won':w.status==='Verloren'?'s-lost':'s-open';
+      const heim = w.heim||w.home_team||'—';
+      const gast = w.gast||w.away_team||'—';
       return `<tr>
-        <td>${w.datum||''}</td>
-        <td style="font-weight:600">${w.heim} vs ${w.gast}</td>
-        <td>${w.empfehlung||''}</td>
-        <td style="color:var(--blue);font-weight:700">${w.quote||''}</td>
+        <td style="color:var(--muted)">${w.datum||''}</td>
+        <td style="font-weight:600;max-width:160px">${heim} vs ${gast}</td>
+        <td><span class="badge bb" style="font-size:9px">${w.empfehlung||''}</span></td>
+        <td style="color:var(--blue);font-weight:800">${w.quote||''}</td>
         <td>${(w.einsatz||0).toFixed(2)}€</td>
         <td style="color:${gv>0?'var(--green)':gv<0?'var(--red)':'var(--muted)'};font-weight:700">
           ${gv>=0?'+':''}${gv.toFixed(2)}€</td>
-        <td style="${sc}">${w.status||'Offen'}</td>
+        <td><span class="status-badge ${sc}">${w.status||'Offen'}</span></td>
       </tr>`;
     }).join('')}</tbody></table>`;
 }
 
-// ── AKTIONEN ───────────────────────────────────────────────────────
+// ══ AKTIONEN ══
 async function analyseStarten() {
   const btn = document.getElementById('btn-analyse');
   btn.disabled = true; btn.textContent = '⏳ Analysiere...';
@@ -542,7 +706,7 @@ async function analyseStarten() {
     setTimeout(async () => {
       await ladeAlles();
       btn.disabled = false; btn.innerHTML = '🔍 Analysieren';
-      showToast('✅ Analyse abgeschlossen!', 3000);
+      showToast('✅ Analyse abgeschlossen!');
     }, 50000);
   } catch(e) {
     btn.disabled = false; btn.innerHTML = '🔍 Analysieren';
@@ -553,19 +717,18 @@ async function driveUpload() {
   showToast('☁️ Upload gestartet...');
   try {
     await fetch('/api/drive-upload', {method:'POST'});
-    setTimeout(() => showToast('✅ Auf Google Drive hochgeladen!', 3000), 3000);
+    setTimeout(() => showToast('✅ Auf Google Drive hochgeladen!'), 3000);
   } catch(e) { showToast('❌ Upload-Fehler'); }
 }
 
 async function analyseJetzt(typ) {
   const id = typ === 'woche' ? 'wochen-analyse' : 'monats-analyse';
   document.getElementById(id).innerHTML = '<div class="loading"><div class="spinner"></div>KI analysiert...</div>';
-  showToast(`📊 ${typ === 'woche' ? 'Wochen' : 'Monats'}analyse wird erstellt...`);
-  // Trigger via Backend (background task)
+  showToast(`📊 ${typ==='woche'?'Wochen':'Monats'}analyse wird erstellt...`);
   try {
     await fetch('/api/analyse-starten', {method:'POST'});
     setTimeout(() => {
-      document.getElementById(id).innerHTML = '<div class="analyse-text">✅ Analyse läuft im Hintergrund und wird in Excel gespeichert. Lade Excel herunter um sie zu sehen.</div>';
+      document.getElementById(id).innerHTML = '<div class="analyse-text">✅ Analyse läuft im Hintergrund und wird in Excel gespeichert.</div>';
     }, 2000);
   } catch(e) {}
 }
