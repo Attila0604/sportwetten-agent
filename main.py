@@ -175,7 +175,7 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown()
 
 
-app = FastAPI(title="Sportwetten KI Multi-Agent", lifespan=lifespan)
+app = FastAPI(title="Sportwetten KI Multi-Agent v2.4", lifespan=lifespan)
 static_dir = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
