@@ -14,23 +14,19 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--t1);font-family:-apple-system,system-ui,sans-serif;font-size:13px;min-height:100vh;}
-
 @keyframes pls{0%,100%{opacity:1;}50%{opacity:.2;}}
 @keyframes rpl{0%{opacity:.5;transform:scale(1);}100%{opacity:0;transform:scale(3);}}
 @keyframes fin{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes rowIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
-@keyframes growBar{to{width:var(--w);}}
-@keyframes draw{to{stroke-dashoffset:0;}}
 @keyframes toast{0%{opacity:0;transform:translateY(20px);}15%,85%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-10px);}}
 
-/* Layout */
 .app{display:flex;flex-direction:column;min-height:100vh;}
 .hdr{padding:11px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--s1);position:sticky;top:0;z-index:100;}
 .logo-box{width:28px;height:28px;border:1.5px solid var(--gr);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gr);}
 .statbar{display:flex;border-bottom:1px solid var(--bd);}
-.stat{flex:1;padding:9px 22px;border-right:1px solid var(--bd);cursor:default;transition:background .2s;}
+.stat{flex:1;padding:9px 22px;border-right:1px solid var(--bd);transition:background .2s;}
 .stat:last-child{border-right:none;}
 .stat:hover{background:rgba(255,255,255,.025);}
 .sl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);}
@@ -43,39 +39,26 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,system-ui,sa
 .pane{display:none;padding:20px 22px;animation:fin .25s ease-out;}
 .pane.on{display:block;}
 .content{max-width:1100px;margin:0 auto;width:100%;}
-
-/* Cards */
 .card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;transition:background .2s;}
 .card:hover{background:rgba(255,255,255,.04);}
 .card-title{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:12px;}
-
-/* Grid */
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px;}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px;}
 .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px;}
 @media(max-width:700px){.g4{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr 1fr;}.g2{grid-template-columns:1fr;}}
-
-/* KPI */
 .kpi{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:13px 14px;border-left:3px solid transparent;transition:background .2s,transform .15s;}
 .kpi:hover{background:rgba(255,255,255,.05);transform:translateY(-1px);}
 .kl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:4px;}
 .kv{font-size:19px;font-weight:600;line-height:1.2;}
 .kt{font-size:11px;margin-top:3px;color:var(--t3);}
-
-/* Badges */
 .bt{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;}
 .btg{background:rgba(0,229,160,.12);color:var(--gr);}
 .btr{background:rgba(255,64,96,.12);color:var(--rd);}
 .bto{background:rgba(255,181,32,.12);color:var(--am);}
 .btb{background:rgba(107,135,245,.12);color:var(--bl);}
-.btp{background:rgba(160,122,245,.12);color:var(--pu);}
 .btx{background:rgba(255,255,255,.07);color:var(--t2);}
-
-/* Progress bar */
 .pbar{background:rgba(255,255,255,.07);border-radius:3px;height:4px;overflow:hidden;}
 .pfill{height:4px;border-radius:3px;width:0;}
-
-/* Table rows */
 .tbl{width:100%;}
 .tbl-hd,.tbl-row{display:grid;align-items:center;padding:9px 8px;font-size:12px;border-left:3px solid transparent;margin-left:-8px;}
 .tbl-hd{color:var(--t3);font-size:10px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--bd);}
@@ -85,8 +68,6 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,system-ui,sa
 .row-g{border-left-color:var(--gr);}
 .row-r{border-left-color:var(--rd);}
 .row-o{border-left-color:var(--am);}
-
-/* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:12px;cursor:pointer;border:1px solid;transition:background .15s,transform .1s;font-family:inherit;}
 .btn:active{transform:scale(.98);}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
@@ -94,29 +75,15 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,system-ui,sa
 .btn-p:hover:not(:disabled){background:rgba(0,229,160,.14);}
 .btn-s{border-color:var(--bd2);color:var(--t2);background:rgba(255,255,255,.03);}
 .btn-s:hover:not(:disabled){background:rgba(255,255,255,.07);}
-.btn-r{border-color:rgba(255,64,96,.35);color:var(--rd);background:rgba(255,64,96,.07);}
-.btn-r:hover:not(:disabled){background:rgba(255,64,96,.14);}
 .btn-block{width:100%;display:flex;margin-top:6px;}
-
-/* Live dot */
 .live-wrap{position:relative;width:8px;height:8px;flex-shrink:0;}
 .live-dot{position:absolute;inset:0;border-radius:50%;background:var(--gr);animation:pls 2s ease-in-out infinite;}
 .live-ring{position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--gr);animation:rpl 2s ease-out infinite;}
-
-/* Divider */
 hr{border:none;border-top:1px solid var(--bd);margin:12px 0;}
-
-/* Empty state */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;gap:10px;color:var(--t3);text-align:center;}
 .empty-icon{width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;}
-
-/* Spinner */
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gr);border-radius:50%;animation:spin .7s linear infinite;}
-
-/* Toast */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--bd2);border-radius:8px;padding:10px 18px;font-size:13px;z-index:999;pointer-events:none;animation:toast 3s ease forwards;}
-
-/* Liga toggle */
 .liga-group{margin-bottom:16px;}
 .liga-group-title{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bd);}
 .liga-list{display:flex;flex-direction:column;gap:6px;}
@@ -132,28 +99,18 @@ hr{border:none;border-top:1px solid var(--bd);margin:12px 0;}
 .toggle-slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:rgba(255,255,255,.5);border-radius:50%;transition:transform .2s,background .2s;}
 .toggle input:checked+.toggle-slider{background:rgba(0,229,160,.25);border:1px solid rgba(0,229,160,.4);}
 .toggle input:checked+.toggle-slider:before{transform:translateX(16px);background:var(--gr);}
-
-/* Top3 card */
 .tip-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;border-left:4px solid var(--am);margin-bottom:10px;transition:background .2s;}
 .tip-card:hover{background:rgba(255,255,255,.04);}
 .tip-rank{width:22px;height:22px;border-radius:50%;background:rgba(255,181,32,.15);color:var(--am);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-
-/* Donut center */
 .donut-wrap{position:relative;}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-
-/* Analyse card */
 .analyse-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px;}
 .analyse-text{font-size:12px;color:var(--t2);line-height:1.7;margin-top:10px;white-space:pre-wrap;}
-
-/* Countdown */
 .cd-sep{animation:blink 1s step-end infinite;}
 </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- HEADER -->
   <div class="hdr">
     <div style="display:flex;align-items:center;gap:9px;">
       <div class="logo-box">SK</div>
@@ -161,7 +118,7 @@ hr{border:none;border-top:1px solid var(--bd);margin:12px 0;}
       <span class="bt btx" style="font-size:10px;">v2.4</span>
     </div>
     <div style="display:flex;align-items:center;gap:14px;font-size:11px;color:var(--t3);">
-      <span style="display:flex;align-items:center;gap:7px;" id="status-indicator">
+      <span style="display:flex;align-items:center;gap:7px;">
         <div class="live-wrap"><div class="live-ring"></div><div class="live-dot"></div></div>
         <span style="color:var(--gr);">Online</span>
       </span>
@@ -170,7 +127,6 @@ hr{border:none;border-top:1px solid var(--bd);margin:12px 0;}
     </div>
   </div>
 
-  <!-- STAT BAR -->
   <div class="statbar">
     <div class="stat"><div class="sl">Kapital</div><div class="sv" id="sb-kap" style="color:var(--am);">…</div></div>
     <div class="stat"><div class="sl">ROI</div><div class="sv" id="sb-roi">…</div></div>
@@ -178,7 +134,6 @@ hr{border:none;border-top:1px solid var(--bd);margin:12px 0;}
     <div class="stat"><div class="sl">Max Einsatz</div><div class="sv" id="sb-max">…</div></div>
   </div>
 
-  <!-- TABS -->
   <div class="nav">
     <div class="tab on" data-t="heute">🌙 Heute</div>
     <div class="tab" data-t="top3">⭐ Top 3</div>
@@ -189,312 +144,189 @@ hr{border:none;border-top:1px solid var(--bd);margin:12px 0;}
     <div class="tab" data-t="drive">☁️ Drive</div>
   </div>
 
-  <!-- HEUTE -->
-  <div class="pane on" id="pane-heute">
-    <div class="content">
-      <div id="heute-content">
-        <div class="empty">
-          <div class="empty-icon">
-            <div class="spin"></div>
-          </div>
-          <div>Lade Daten…</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="pane on" id="pane-heute"><div class="content"><div id="heute-content"><div class="empty"><div class="empty-icon"><div class="spin"></div></div><div>Lade Daten…</div></div></div></div></div>
 
-  <!-- TOP 3 -->
-  <div class="pane" id="pane-top3">
-    <div class="content">
-      <div style="padding:10px 14px;background:rgba(107,135,245,.07);border:1px solid rgba(107,135,245,.18);border-radius:8px;margin-bottom:16px;font-size:12px;color:var(--t3);line-height:1.7;">
-        ⭐ Top 3 werden von der KI ausgewählt und automatisch ins Excel eingetragen. Einsatz nach halbem Kelly-Kriterium (max. 3% des Kapitals).
-      </div>
-      <div id="top3-content">
-        <div class="empty"><div class="spin"></div><div>Lade Top 3…</div></div>
-      </div>
-    </div>
-  </div>
+  <div class="pane" id="pane-top3"><div class="content">
+    <div style="padding:10px 14px;background:rgba(107,135,245,.07);border:1px solid rgba(107,135,245,.18);border-radius:8px;margin-bottom:16px;font-size:12px;color:var(--t3);line-height:1.7;">⭐ Top 3 werden von der KI ausgewählt und automatisch ins Excel eingetragen. Einsatz nach halbem Kelly-Kriterium (max. 3% des Kapitals).</div>
+    <div id="top3-content"><div class="empty"><div class="spin"></div><div>Lade Top 3…</div></div></div>
+  </div></div>
 
-  <!-- STATISTIK -->
-  <div class="pane" id="pane-statistik">
-    <div class="content">
-      <div class="g4" id="kpi-row"></div>
-      <div class="g2">
-        <div class="card">
-          <div class="card-title">Kapitalverlauf</div>
-          <div style="position:relative;height:160px;"><canvas id="capChart" role="img" aria-label="Kapitalverlauf">Kapitalverlauf wird geladen</canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Wetten Übersicht</div>
-          <div style="display:flex;gap:14px;align-items:center;margin-top:4px;">
-            <div class="donut-wrap" style="width:115px;height:115px;flex-shrink:0;">
-              <canvas id="winChart" role="img" aria-label="Wetten Übersicht" width="115" height="115">Wetten-Statistik</canvas>
-              <div class="donut-center"><div style="font-size:18px;font-weight:700;" id="donut-total">–</div><div style="font-size:10px;color:var(--t3);">Wetten</div></div>
-            </div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:9px;font-size:12px;" id="wetten-legend"></div>
-          </div>
-        </div>
-      </div>
-      <div class="g3" id="stat-extra"></div>
-    </div>
-  </div>
-
-  <!-- VERLAUF -->
-  <div class="pane" id="pane-verlauf">
-    <div class="content">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);">Letzte Wetten</div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-s" onclick="filterWetten('alle')" id="f-alle">Alle</button>
-          <button class="btn btn-s" onclick="filterWetten('gewonnen')" id="f-gew">Gewonnen</button>
-          <button class="btn btn-s" onclick="filterWetten('verloren')" id="f-ver">Verloren</button>
-          <button class="btn btn-s" onclick="filterWetten('offen')" id="f-off">Offen</button>
-        </div>
-      </div>
-      <div id="verlauf-content"></div>
-    </div>
-  </div>
-
-  <!-- ANALYSEN -->
-  <div class="pane" id="pane-analysen">
-    <div class="content">
-      <div class="analyse-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div>
-            <div style="font-weight:600;margin-bottom:3px;">📅 Wochenanalyse</div>
-            <div style="font-size:11px;color:var(--t3);">Jeden Montag automatisch um 07:00 Uhr</div>
-          </div>
-          <span class="bt bto">Mo 07:00</span>
-        </div>
-        <hr>
-        <button class="btn btn-p" onclick="starteWochenAnalyse()" id="btn-woche">Jetzt erstellen</button>
-        <div id="woche-result" class="analyse-text"></div>
-      </div>
-      <div class="analyse-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div>
-            <div style="font-weight:600;margin-bottom:3px;">🗓️ Monatsanalyse</div>
-            <div style="font-size:11px;color:var(--t3);">Am 1. jeden Monats automatisch um 08:00 Uhr</div>
-          </div>
-          <span class="bt bto">1. des Monats</span>
-        </div>
-        <hr>
-        <button class="btn btn-p" onclick="starteMonatsAnalyse()" id="btn-monat">Jetzt erstellen</button>
-        <div id="monat-result" class="analyse-text"></div>
-      </div>
-      <div class="analyse-card">
-        <div style="font-weight:600;margin-bottom:3px;">🏆 Ergebnis-Check</div>
-        <div style="font-size:11px;color:var(--t3);margin-bottom:10px;">Offene Wetten auf Ergebnisse prüfen</div>
-        <hr>
-        <button class="btn btn-p" onclick="pruefeErgebnisse()" id="btn-ergebnisse">Jetzt prüfen</button>
-        <div id="ergebnisse-result" class="analyse-text"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- LIGEN MANAGER -->
-  <div class="pane" id="pane-ligen">
-    <div class="content">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div>
-          <div style="font-size:15px;font-weight:600;margin-bottom:3px;">⚙️ Liga Manager</div>
-          <div style="font-size:12px;color:var(--t3);">Nur aktive Ligen werden bei der Analyse abgefragt → spart Credits</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:11px;color:var(--t3);">Credits-Verbrauch</div>
-          <div style="font-size:18px;font-weight:600;color:var(--gr);" id="credit-estimate">0</div>
-          <div style="font-size:10px;color:var(--t3);">pro Monat (est.)</div>
-        </div>
-      </div>
-      <div id="liga-manager"></div>
-      <button class="btn btn-p" style="margin-top:8px;" onclick="speichereLigen()">💾 Ligen speichern & neu starten</button>
-    </div>
-  </div>
-
-  <!-- DRIVE -->
-  <div class="pane" id="pane-drive">
-    <div class="content">
-      <div class="card" style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-weight:600;">☁️ Google Drive</div>
-          <span class="bt" id="drive-status-badge">…</span>
-        </div>
-        <div style="font-size:12px;color:var(--t3);margin-bottom:14px;">Ordner: <b style="color:var(--t2);">Sportwetten durch KI Multi Agent</b></div>
-        <button class="btn btn-p btn-block" onclick="driveUpload()" id="btn-drive">☁️ Jetzt zu Google Drive hochladen</button>
-        <a href="/api/excel-download" class="btn btn-s btn-block" style="text-decoration:none;margin-top:6px;">📥 Excel herunterladen (.xlsx)</a>
-      </div>
-
-      <div class="card" style="margin-bottom:12px;">
-        <div class="card-title">Excel Sheets</div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>📋 Empfehlungen</span><span class="bt btg">Alle Value Bets</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>🎯 Meine Wetten</span><span class="bt bto">Top 3 Auto</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>💰 Kapitalverlauf</span><span class="bt bto">Täglich</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>📅 Wochenanalyse</span><span class="bt btb">KI Bericht</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>🗓️ Monatsanalyse</span><span class="bt btb">KI Bericht</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px;"><span>📊 Statistik</span><span class="bt btb">Kennzahlen</span></div>
-      </div>
-
-      <div class="card" style="margin-bottom:12px;">
-        <div class="card-title">WhatsApp</div>
-        <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">Täglich um 21:00 Uhr automatische Benachrichtigung</div>
-        <button class="btn btn-p" onclick="whatsappTest()" id="btn-wa">📱 Test senden</button>
-      </div>
-
+  <div class="pane" id="pane-statistik"><div class="content">
+    <div class="g4" id="kpi-row"></div>
+    <div class="g2">
       <div class="card">
-        <div class="card-title">System Info</div>
-        <div id="system-info" style="font-size:12px;display:flex;flex-direction:column;gap:7px;"></div>
+        <div class="card-title">Kapitalverlauf</div>
+        <div style="position:relative;height:160px;"><canvas id="capChart" role="img" aria-label="Kapitalverlauf">Kapitalverlauf</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Wetten Übersicht</div>
+        <div style="display:flex;gap:14px;align-items:center;margin-top:4px;">
+          <div class="donut-wrap" style="width:115px;height:115px;flex-shrink:0;">
+            <canvas id="winChart" role="img" aria-label="Wetten" width="115" height="115">Wetten</canvas>
+            <div class="donut-center"><div style="font-size:18px;font-weight:700;" id="donut-total">–</div><div style="font-size:10px;color:var(--t3);">Wetten</div></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:9px;font-size:12px;" id="wetten-legend"></div>
+        </div>
       </div>
     </div>
-  </div>
+    <div class="g3" id="stat-extra"></div>
+  </div></div>
 
+  <div class="pane" id="pane-verlauf"><div class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);">Letzte Wetten</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-s" onclick="filterWetten('alle')" id="f-alle">Alle</button>
+        <button class="btn btn-s" onclick="filterWetten('gewonnen')" id="f-gew">Gewonnen</button>
+        <button class="btn btn-s" onclick="filterWetten('verloren')" id="f-ver">Verloren</button>
+        <button class="btn btn-s" onclick="filterWetten('offen')" id="f-off">Offen</button>
+      </div>
+    </div>
+    <div id="verlauf-content"></div>
+  </div></div>
+
+  <div class="pane" id="pane-analysen"><div class="content">
+    <div class="analyse-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;margin-bottom:3px;">📅 Wochenanalyse</div><div style="font-size:11px;color:var(--t3);">Jeden Montag automatisch um 07:00 Uhr</div></div><span class="bt bto">Mo 07:00</span></div>
+      <hr><button class="btn btn-p" onclick="starteWochenAnalyse()" id="btn-woche">Jetzt erstellen</button>
+      <div id="woche-result" class="analyse-text"></div>
+    </div>
+    <div class="analyse-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;margin-bottom:3px;">🗓️ Monatsanalyse</div><div style="font-size:11px;color:var(--t3);">Am 1. jeden Monats automatisch um 08:00 Uhr</div></div><span class="bt bto">1. des Monats</span></div>
+      <hr><button class="btn btn-p" onclick="starteMonatsAnalyse()" id="btn-monat">Jetzt erstellen</button>
+      <div id="monat-result" class="analyse-text"></div>
+    </div>
+    <div class="analyse-card">
+      <div style="font-weight:600;margin-bottom:3px;">🏆 Ergebnis-Check</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:10px;">Offene Wetten auf Ergebnisse prüfen</div>
+      <hr><button class="btn btn-p" onclick="pruefeErgebnisse()" id="btn-ergebnisse">Jetzt prüfen</button>
+      <div id="ergebnisse-result" class="analyse-text"></div>
+    </div>
+  </div></div>
+
+  <div class="pane" id="pane-ligen"><div class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div><div style="font-size:15px;font-weight:600;margin-bottom:3px;">⚙️ Liga Manager</div><div style="font-size:12px;color:var(--t3);">Nur aktive Ligen werden bei der Analyse abgefragt → spart Credits</div></div>
+      <div style="text-align:right;"><div style="font-size:11px;color:var(--t3);">Credits-Verbrauch</div><div style="font-size:18px;font-weight:600;color:var(--gr);" id="credit-estimate">0</div><div style="font-size:10px;color:var(--t3);">pro Monat (est.)</div></div>
+    </div>
+    <div id="liga-manager"></div>
+    <button class="btn btn-p" style="margin-top:8px;" onclick="speichereLigen()">💾 Ligen speichern</button>
+  </div></div>
+
+  <div class="pane" id="pane-drive"><div class="content">
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-weight:600;">☁️ Google Drive</div><span class="bt" id="drive-status-badge">…</span></div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:14px;">Ordner: <b style="color:var(--t2);">Sportwetten durch KI Multi Agent</b></div>
+      <button class="btn btn-p btn-block" onclick="driveUpload()" id="btn-drive">☁️ Jetzt zu Google Drive hochladen</button>
+      <a href="/api/excel-download" class="btn btn-s btn-block" style="text-decoration:none;margin-top:6px;">📥 Excel herunterladen (.xlsx)</a>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">Excel Sheets</div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>📋 Empfehlungen</span><span class="bt btg">Alle Value Bets</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>🎯 Meine Wetten</span><span class="bt bto">Top 3 Auto</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>💰 Kapitalverlauf</span><span class="bt bto">Täglich</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>📅 Wochenanalyse</span><span class="bt btb">KI Bericht</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span>🗓️ Monatsanalyse</span><span class="bt btb">KI Bericht</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px;"><span>📊 Statistik</span><span class="bt btb">Kennzahlen</span></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">WhatsApp</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">Täglich um 21:00 Uhr automatische Benachrichtigung</div>
+      <button class="btn btn-p" onclick="whatsappTest()" id="btn-wa">📱 Test senden</button>
+    </div>
+    <div class="card">
+      <div class="card-title">System Info</div>
+      <div id="system-info" style="font-size:12px;display:flex;flex-direction:column;gap:7px;"></div>
+    </div>
+  </div></div>
 </div>
 
-<!-- TOAST -->
 <div id="toast" style="display:none;"></div>
 
 <script>
-// ── Alle verfügbaren Ligen ──────────────────────────────────────────────────
 const ALLE_LIGEN = {
   "Fußball – Europa Top": [
-    {key:"soccer_epl",              name:"Premier League",      flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", credits:2},
-    {key:"soccer_germany_bundesliga",name:"Bundesliga",         flag:"🇩🇪", credits:2},
-    {key:"soccer_spain_la_liga",    name:"La Liga",             flag:"🇪🇸", credits:2},
-    {key:"soccer_italy_serie_a",    name:"Serie A",             flag:"🇮🇹", credits:2},
-    {key:"soccer_france_ligue_one", name:"Ligue 1",             flag:"🇫🇷", credits:2},
-    {key:"soccer_uefa_champs_league",name:"Champions League",   flag:"🏆", credits:2},
-    {key:"soccer_europe_europa_league",name:"Europa League",    flag:"🇪🇺", credits:2},
+    {key:"soccer_epl",name:"Premier League",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",credits:2},
+    {key:"soccer_germany_bundesliga",name:"Bundesliga",flag:"🇩🇪",credits:2},
+    {key:"soccer_spain_la_liga",name:"La Liga",flag:"🇪🇸",credits:2},
+    {key:"soccer_italy_serie_a",name:"Serie A",flag:"🇮🇹",credits:2},
+    {key:"soccer_france_ligue_one",name:"Ligue 1",flag:"🇫🇷",credits:2},
+    {key:"soccer_uefa_champs_league",name:"Champions League",flag:"🏆",credits:2},
+    {key:"soccer_europe_europa_league",name:"Europa League",flag:"🇪🇺",credits:2},
   ],
   "Fußball – Weitere": [
-    {key:"soccer_austria_bundesliga",name:"Austria Bundesliga", flag:"🇦🇹", credits:1},
-    {key:"soccer_portugal_primeira_liga",name:"Primeira Liga",  flag:"🇵🇹", credits:1},
-    {key:"soccer_netherlands_eredivisie",name:"Eredivisie",     flag:"🇳🇱", credits:1},
-    {key:"soccer_turkey_super_league",name:"Süper Lig",         flag:"🇹🇷", credits:1},
-    {key:"soccer_belgium_first_div", name:"Jupiler Pro League", flag:"🇧🇪", credits:1},
+    {key:"soccer_austria_bundesliga",name:"Austria Bundesliga",flag:"🇦🇹",credits:1},
+    {key:"soccer_portugal_primeira_liga",name:"Primeira Liga",flag:"🇵🇹",credits:1},
+    {key:"soccer_netherlands_eredivisie",name:"Eredivisie",flag:"🇳🇱",credits:1},
+    {key:"soccer_turkey_super_league",name:"Süper Lig",flag:"🇹🇷",credits:1},
+    {key:"soccer_belgium_first_div",name:"Jupiler Pro League",flag:"🇧🇪",credits:1},
   ],
   "Tennis": [
-    {key:"tennis_atp_french_open",  name:"ATP French Open",     flag:"🎾", credits:2},
-    {key:"tennis_wta_french_open",  name:"WTA French Open",     flag:"🎾", credits:2},
-    {key:"tennis_atp_wimbledon",    name:"ATP Wimbledon",        flag:"🎾", credits:2},
-    {key:"tennis_atp_us_open",      name:"ATP US Open",          flag:"🎾", credits:2},
+    {key:"tennis_atp_french_open",name:"ATP French Open",flag:"🎾",credits:2},
+    {key:"tennis_wta_french_open",name:"WTA French Open",flag:"🎾",credits:2},
+    {key:"tennis_atp_wimbledon",name:"ATP Wimbledon",flag:"🎾",credits:2},
+    {key:"tennis_atp_us_open",name:"ATP US Open",flag:"🎾",credits:2},
   ],
   "Basketball": [
-    {key:"basketball_nba",          name:"NBA",                  flag:"🏀", credits:2},
-    {key:"basketball_euroleague",   name:"EuroLeague",           flag:"🏀", credits:2},
+    {key:"basketball_nba",name:"NBA",flag:"🏀",credits:2},
+    {key:"basketball_euroleague",name:"EuroLeague",flag:"🏀",credits:2},
   ],
   "Eishockey": [
-    {key:"icehockey_nhl",           name:"NHL",                  flag:"🏒", credits:2},
-    {key:"icehockey_sweden_hockey_league",name:"SHL",            flag:"🏒", credits:1},
+    {key:"icehockey_nhl",name:"NHL",flag:"🏒",credits:2},
+    {key:"icehockey_sweden_hockey_league",name:"SHL",flag:"🏒",credits:1},
   ],
-  "American Football": [
-    {key:"americanfootball_nfl",    name:"NFL",                  flag:"🏈", credits:2},
-  ],
-  "Baseball": [
-    {key:"baseball_mlb",            name:"MLB",                  flag:"⚾", credits:2},
-  ],
+  "American Football": [{key:"americanfootball_nfl",name:"NFL",flag:"🏈",credits:2}],
+  "Baseball": [{key:"baseball_mlb",name:"MLB",flag:"⚾",credits:2}],
 };
 
-// Default aktive Ligen (ursprüngliche 7)
-const DEFAULT_AKTIV = new Set([
-  "soccer_epl","soccer_germany_bundesliga","soccer_spain_la_liga",
-  "soccer_italy_serie_a","soccer_france_ligue_one",
-  "soccer_uefa_champs_league","soccer_austria_bundesliga"
-]);
+const DEFAULT_AKTIV = new Set(["soccer_epl","soccer_germany_bundesliga","soccer_spain_la_liga","soccer_italy_serie_a","soccer_france_ligue_one","soccer_uefa_champs_league","soccer_austria_bundesliga"]);
+let aktiveLigen = new Set(JSON.parse(localStorage.getItem('aktiveLigen')||'null')||[...DEFAULT_AKTIV]);
+let statsData=null, verlaufData=[], capChart=null, winChart=null, verlaufFilter='alle';
 
-let aktiveLigen = new Set(JSON.parse(localStorage.getItem('aktiveLigen') || 'null') || [...DEFAULT_AKTIV]);
-let statsData = null, verlaufData = [], capChart = null, winChart = null;
-let verlaufFilter = 'alle';
-
-// ── Utils ──────────────────────────────────────────────────────────────────
-function toast(msg, color='var(--gr)'){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.style.display='block'; el.style.color=color;
-  setTimeout(()=>el.style.display='none', 3100);
-}
-function fmt(v){return v===undefined||v===null?'—':v;}
+function toast(msg,color){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';el.style.color=color||'var(--gr)';setTimeout(()=>el.style.display='none',3100);}
 function fmtE(v){return typeof v==='number'?(v>=0?'+':'')+v.toFixed(2)+'€':'—';}
 function fmtP(v){return typeof v==='number'?(v>=0?'+':'')+v.toFixed(2)+'%':'—';}
-function setBtnLoading(id, loading, txt){
-  const b=document.getElementById(id);
-  if(!b)return;
-  b.disabled=loading;
-  b.innerHTML=loading?`<div class="spin"></div> ${txt||'Lädt…'}`:b.dataset.orig||b.innerHTML;
-  if(!b.dataset.orig && !loading) b.dataset.orig=b.innerHTML;
-}
 
-// ── Clock ──────────────────────────────────────────────────────────────────
-function tick(){
-  const n=new Date();
-  const el=document.getElementById('clock');
-  if(el)el.textContent=n.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const d=document.getElementById('hdr-date');
-  if(d)d.textContent=n.toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit',year:'numeric'});
-}
-tick(); setInterval(tick,1000);
+function tick(){const n=new Date();const el=document.getElementById('clock');if(el)el.textContent=n.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});const d=document.getElementById('hdr-date');if(d)d.textContent=n.toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit',year:'numeric'});}
+tick();setInterval(tick,1000);
 
-// ── Countdown ─────────────────────────────────────────────────────────────
-function countdown(){
-  const n=new Date(),t=new Date();
-  t.setHours(21,0,0,0); if(n>t)t.setDate(t.getDate()+1);
-  const d=t-n, h=Math.floor(d/3600000), m=Math.floor((d%3600000)/60000), s=Math.floor((d%60000)/1000);
-  const el=document.getElementById('cd-h'),em=document.getElementById('cd-m'),es=document.getElementById('cd-s');
-  if(el)el.textContent=String(h).padStart(2,'0');
-  if(em)em.textContent=String(m).padStart(2,'0');
-  if(es)es.textContent=String(s).padStart(2,'0');
-}
-countdown(); setInterval(countdown,1000);
+function countdown(){const n=new Date(),t=new Date();t.setHours(21,0,0,0);if(n>t)t.setDate(t.getDate()+1);const d=t-n,h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);const eh=document.getElementById('cd-h'),em=document.getElementById('cd-m'),es=document.getElementById('cd-s');if(eh)eh.textContent=String(h).padStart(2,'0');if(em)em.textContent=String(m).padStart(2,'0');if(es)es.textContent=String(s).padStart(2,'0');}
+countdown();setInterval(countdown,1000);
 
-// ── API Calls ──────────────────────────────────────────────────────────────
 async function ladeStatus(){
   try{
-    const r=await fetch('/api/status'); const d=await r.json();
+    const r=await fetch('/api/status');const d=await r.json();
     document.getElementById('sb-max').textContent=(d.max_risiko||3)+'% / Einsatz';
     const si=document.getElementById('system-info');
-    if(si) si.innerHTML=`
+    if(si)si.innerHTML=`
       <div style="display:flex;justify-content:space-between;"><span style="color:var(--t3);">Status</span><span style="display:flex;align-items:center;gap:6px;"><div class="live-wrap"><div class="live-ring"></div><div class="live-dot"></div></div><b style="color:var(--gr);">Online</b></span></div>
       <div style="display:flex;justify-content:space-between;"><span style="color:var(--t3);">Version</span><span>${d.version||'2.4'}</span></div>
       <div style="display:flex;justify-content:space-between;"><span style="color:var(--t3);">Letzter Lauf</span><span>${d.letzter_lauf?new Date(d.letzter_lauf).toLocaleString('de-AT'):'–'}</span></div>
       <div style="display:flex;justify-content:space-between;"><span style="color:var(--t3);">Drive</span><span class="bt ${d.drive_eingerichtet?'btg':'btr'}">${d.drive_eingerichtet?'Eingerichtet':'Nicht eingerichtet'}</span></div>
       <div style="display:flex;justify-content:space-between;"><span style="color:var(--t3);">WhatsApp</span><span class="bt ${d.whatsapp_eingerichtet?'btg':'btr'}">${d.whatsapp_eingerichtet?'Aktiv':'Nicht aktiv'}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t3);">Startkapital</span><span>${d.startkapital||1000}€</span></div>
-    `;
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t3);">Startkapital</span><span>${d.startkapital||1000}€</span></div>`;
     const db=document.getElementById('drive-status-badge');
-    if(db){db.textContent=d.drive_eingerichtet?'Eingerichtet':'Nicht eingerichtet'; db.className='bt '+(d.drive_eingerichtet?'btg':'btr');}
+    if(db){db.textContent=d.drive_eingerichtet?'Eingerichtet':'Nicht eingerichtet';db.className='bt '+(d.drive_eingerichtet?'btg':'btr');}
   }catch(e){console.error(e);}
 }
 
 async function ladeStatistik(){
   try{
-    const r=await fetch('/api/statistik'); statsData=await r.json();
-    const kap=statsData.aktuelles_kapital||0, start=statsData.startkapital||1000;
-    const gv=kap-start, roi=start>0?(gv/start*100):0;
-    const gew=statsData.gewonnen||0, ver=statsData.verloren||0, off=statsData.offen||0, tot=statsData.gesamt_wetten||0;
+    const r=await fetch('/api/statistik');statsData=await r.json();
+    const kap=statsData.aktuelles_kapital||0,start=statsData.startkapital||1000;
+    const gv=kap-start,roi=start>0?(gv/start*100):0;
+    const gew=statsData.gewonnen||0,ver=statsData.verloren||0,off=statsData.offen||0,tot=statsData.gesamt_wetten||0;
 
-    // Stat bar
     document.getElementById('sb-kap').textContent=kap.toFixed(2)+'€';
-    const roiEl=document.getElementById('sb-roi');
-    roiEl.textContent=fmtP(roi); roiEl.style.color=roi>=0?'var(--gr)':'var(--rd)';
-    const gvEl=document.getElementById('sb-gv');
-    gvEl.textContent=fmtE(gv); gvEl.style.color=gv>=0?'var(--gr)':'var(--rd)';
+    const roiEl=document.getElementById('sb-roi');roiEl.textContent=fmtP(roi);roiEl.style.color=roi>=0?'var(--gr)':'var(--rd)';
+    const gvEl=document.getElementById('sb-gv');gvEl.textContent=fmtE(gv);gvEl.style.color=gv>=0?'var(--gr)':'var(--rd)';
 
-    // KPI row
     const tq=tot>0?Math.round(gew/tot*100):0;
     document.getElementById('kpi-row').innerHTML=`
-      <div class="kpi" style="border-left-color:var(--am);">
-        <div class="kl">Kapital</div><div class="kv" style="color:var(--am);">${kap.toFixed(2)}€</div>
-        <div class="kt" style="color:${gv>=0?'var(--gr)':'var(--rd)'};">${gv>=0?'▴':'▾'} ${Math.abs(gv).toFixed(2)}€ vs Start</div>
-      </div>
-      <div class="kpi" style="border-left-color:var(--rd);">
-        <div class="kl">ROI</div><div class="kv" style="color:${roi>=0?'var(--gr)':'var(--rd)'};">${fmtP(roi)}</div>
-        <div class="kt">${tot} Wetten bisher</div>
-      </div>
-      <div class="kpi" style="border-left-color:var(--bl);">
-        <div class="kl">Trefferquote</div><div class="kv" style="color:var(--bl);">${tq}%</div>
-        <div class="pbar" style="margin-top:7px;"><div class="pfill" style="background:var(--bl);width:${tq}%;transition:width 1s ease;"></div></div>
-      </div>
-      <div class="kpi" style="border-left-color:var(--gr);">
-        <div class="kl">Gewonnen</div><div class="kv" style="color:var(--gr);">${gew} / ${tot-off}</div>
-        <div class="kt">${off} noch offen</div>
-      </div>`;
+      <div class="kpi" style="border-left-color:var(--am);"><div class="kl">Kapital</div><div class="kv" style="color:var(--am);">${kap.toFixed(2)}€</div><div class="kt" style="color:${gv>=0?'var(--gr)':'var(--rd)'};">${gv>=0?'▴':'▾'} ${Math.abs(gv).toFixed(2)}€ vs Start</div></div>
+      <div class="kpi" style="border-left-color:var(--rd);"><div class="kl">ROI</div><div class="kv" style="color:${roi>=0?'var(--gr)':'var(--rd)'};">${fmtP(roi)}</div><div class="kt">${tot} Wetten bisher</div></div>
+      <div class="kpi" style="border-left-color:var(--bl);"><div class="kl">Trefferquote</div><div class="kv" style="color:var(--bl);">${tq}%</div><div class="pbar" style="margin-top:7px;"><div class="pfill" style="background:var(--bl);width:${tq}%;transition:width 1s ease;"></div></div></div>
+      <div class="kpi" style="border-left-color:var(--gr);"><div class="kl">Gewonnen</div><div class="kv" style="color:var(--gr);">${gew} / ${tot-off}</div><div class="kt">${off} noch offen</div></div>`;
 
     document.getElementById('stat-extra').innerHTML=`
       <div class="card"><div class="kl">Startkapital</div><div style="font-size:16px;font-weight:600;">${start.toFixed(2)}€</div></div>
@@ -508,44 +340,32 @@ async function ladeStatistik(){
       <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--am);display:inline-block;"></span>Offen</span><b style="color:var(--am);">${off}</b></div><div class="pbar"><div class="pfill" style="background:var(--am);width:${tot?Math.round(off/tot*100):0}%;transition:width 1s ease;"></div></div></div>
       <hr style="margin:4px 0;"><div style="display:flex;justify-content:space-between;color:var(--t3);"><span>Gesamt</span><b style="color:var(--t1);">${tot}</b></div>`;
 
-    initCharts(statsData, gew, ver, off);
+    initCharts(statsData,gew,ver,off);
     verlaufData=statsData.alle_wetten||[];
     renderVerlauf();
   }catch(e){console.error('Statistik Fehler:',e);}
 }
 
 async function ladeEmpfehlungen(){
-  try{
-    const r=await fetch('/api/empfehlungen'); const d=await r.json();
-    renderHeute(d); renderTop3(d);
-  }catch(e){
-    document.getElementById('heute-content').innerHTML=`<div class="empty"><div style="color:var(--rd);">❌ Fehler beim Laden</div></div>`;
-  }
+  try{const r=await fetch('/api/empfehlungen');const d=await r.json();renderHeute(d);renderTop3(d);}
+  catch(e){document.getElementById('heute-content').innerHTML=`<div class="empty"><div style="color:var(--rd);">❌ Fehler beim Laden</div></div>`;}
 }
 
-// ── Heute Tab ─────────────────────────────────────────────────────────────
 function renderHeute(d){
   const el=document.getElementById('heute-content');
-  if(d.analyse_laeuft){
-    el.innerHTML=`<div class="empty"><div class="spin"></div><div style="font-size:14px;color:var(--am);">Analyse läuft…</div><div>Bitte warten, ca. 45 Sekunden</div></div>`;
-    return;
-  }
+  if(d.analyse_laeuft){el.innerHTML=`<div class="empty"><div class="spin"></div><div style="font-size:14px;color:var(--am);">Analyse läuft…</div><div>Bitte warten, ca. 45 Sekunden</div></div>`;return;}
   if(!d.alle_empfehlungen||d.alle_empfehlungen.length===0){
     el.innerHTML=`
       <div class="empty">
         <div style="position:relative;width:54px;height:54px;">
-          <div class="empty-icon" style="width:54px;height:54px;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </div>
+          <div class="empty-icon" style="width:54px;height:54px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
           <div style="position:absolute;top:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:var(--am);border:2px solid var(--bg);animation:pls 2s ease-in-out infinite;"></div>
         </div>
         <div style="font-size:14px;color:var(--t2);">Noch keine Analyse für heute</div>
         <div style="font-size:12px;">Täglich automatisch um <b style="color:var(--t1);">21:00 Uhr</b></div>
         <div style="background:rgba(255,181,32,.08);border:1px solid rgba(255,181,32,.2);border-radius:8px;padding:8px 24px;font-size:13px;text-align:center;">
           Nächste Analyse in<br>
-          <span style="font-size:24px;font-weight:700;color:var(--am);font-variant-numeric:tabular-nums;letter-spacing:.05em;">
-            <span id="cd-h">--</span><span class="cd-sep">:</span><span id="cd-m">--</span><span class="cd-sep">:</span><span id="cd-s">--</span>
-          </span>
+          <span style="font-size:24px;font-weight:700;color:var(--am);font-variant-numeric:tabular-nums;letter-spacing:.05em;"><span id="cd-h">--</span><span class="cd-sep">:</span><span id="cd-m">--</span><span class="cd-sep">:</span><span id="cd-s">--</span></span>
         </div>
         <button class="btn btn-p" onclick="starteAnalyse()" id="btn-analyse" style="width:200px;">🔍 Jetzt analysieren</button>
       </div>`;
@@ -553,84 +373,67 @@ function renderHeute(d){
   } else {
     const alle=d.alle_empfehlungen;
     el.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div><b>${alle.length}</b> Value Bets gefunden <span style="color:var(--t3);">· ${d.letzter_lauf?new Date(d.letzter_lauf).toLocaleString('de-AT'):'–'}</span></div>
-        <button class="btn btn-p" onclick="starteAnalyse()" id="btn-analyse">🔄 Neu analysieren</button>
-      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;"><div><b>${alle.length}</b> Value Bets gefunden <span style="color:var(--t3);">· ${d.letzter_lauf?new Date(d.letzter_lauf).toLocaleString('de-AT'):'–'}</span></div><button class="btn btn-p" onclick="starteAnalyse()" id="btn-analyse">🔄 Neu analysieren</button></div>
       <div class="card">
         <div class="card-title">Alle Empfehlungen</div>
         <div class="tbl">
-          <div class="tbl-hd" style="grid-template-columns:1fr 90px 60px 60px 70px 80px;">
-            <div>Spiel</div><div>Liga</div><div>Tipp</div><div>Quote</div><div>EV</div><div>Konfidenz</div>
-          </div>
-          ${alle.map(e=>`
-            <div class="tbl-row" style="grid-template-columns:1fr 90px 60px 60px 70px 80px;">
-              <div style="font-weight:500;">${e.heim||e.home||''} vs ${e.gast||e.away||''}</div>
+          <div class="tbl-hd" style="grid-template-columns:1fr 90px 100px 60px 70px 80px;"><div>Spiel</div><div>Liga</div><div>Tipp</div><div>Quote</div><div>EV</div><div>Konfidenz</div></div>
+          ${alle.map(e=>{
+            const ev=typeof e.ev==='number'?(e.ev>1?e.ev:e.ev*100):0;
+            return `<div class="tbl-row" style="grid-template-columns:1fr 90px 100px 60px 70px 80px;">
+              <div style="font-weight:500;">${e.heim||''} vs ${e.gast||''}</div>
               <div style="color:var(--t3);font-size:11px;">${(e.liga||'').split(' ').slice(-1)[0]}</div>
-              <div><span class="bt btb">${e.tipp||''}</span></div>
-              <div>${e.quote||'–'}</div>
-              <div style="color:${(e.ev||0)>0?'var(--gr)':'var(--rd)'};">${e.ev?'+'+e.ev.toFixed(1)+'%':'–'}</div>
+              <div><span class="bt btb">${e.empfehlung||'–'}</span></div>
+              <div>${e.quote?Number(e.quote).toFixed(2):'–'}</div>
+              <div style="color:${ev>0?'var(--gr)':'var(--rd)'};">${ev?(ev>0?'+':'')+ev.toFixed(1)+'%':'–'}</div>
               <div><span class="bt ${(e.konfidenz||0)>=8?'btg':(e.konfidenz||0)>=6?'bto':'btr'}">${e.konfidenz||'–'}/10</span></div>
-            </div>`).join('')}
+            </div>`;}).join('')}
         </div>
       </div>
-      ${d.zusammenfassung?`<div class="card" style="margin-top:12px;"><div class="card-title">KI Zusammenfassung</div><div style="font-size:12px;color:var(--t2);line-height:1.7;margin-top:6px;">${d.zusammenfassung}</div></div>`:''}`;
+      ${d.zusammenfassung?`<div class="card" style="margin-top:12px;"><div class="card-title">KI Zusammenfassung</div><div style="font-size:12px;color:var(--t2);line-height:1.7;margin-top:6px;white-space:pre-wrap;">${d.zusammenfassung}</div></div>`:''}`;
   }
 }
 
-// ── Top 3 Tab ──────────────────────────────────────────────────────────────
 function renderTop3(d){
   const el=document.getElementById('top3-content');
-  if(!d.top3||d.top3.length===0){
-    el.innerHTML=`<div class="empty"><div class="empty-icon" style="background:rgba(255,181,32,.07);border-color:rgba(255,181,32,.2);">⭐</div><div style="font-size:13px;color:var(--t2);">Heute noch keine Top 3</div></div>`;
-    return;
-  }
+  if(!d.top3||d.top3.length===0){el.innerHTML=`<div class="empty"><div class="empty-icon" style="background:rgba(255,181,32,.07);border-color:rgba(255,181,32,.2);">⭐</div><div style="font-size:13px;color:var(--t2);">Heute noch keine Top 3</div></div>`;return;}
   el.innerHTML=d.top3.map((t,i)=>`
     <div class="tip-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <div class="tip-rank">${i+1}</div>
-        <div style="flex:1;">
-          <div style="font-weight:600;font-size:14px;">${t.heim||t.home||''} vs ${t.gast||t.away||''}</div>
-          <div style="font-size:11px;color:var(--t3);">${t.liga||''} · ${t.zeit||''}</div>
-        </div>
+        <div style="flex:1;"><div style="font-weight:600;font-size:14px;">${t.heim||''} vs ${t.gast||''}</div><div style="font-size:11px;color:var(--t3);">${t.liga||''} · ${t.zeit||''}</div></div>
         <span class="bt ${(t.konfidenz||0)>=8?'btg':(t.konfidenz||0)>=6?'bto':'btr'}">${t.konfidenz||'–'}/10</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:12px;">
-        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Tipp</div><b class="bt btb">${t.tipp||'–'}</b></div>
-        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Quote</div><b>${t.quote||'–'}</b></div>
-        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Einsatz</div><b style="color:var(--am);">${t.einsatz?t.einsatz.toFixed(2)+'€':'–'}</b></div>
-        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Pot. Gewinn</div><b style="color:var(--gr);">${t.einsatz&&t.quote?(t.einsatz*t.quote).toFixed(2)+'€':'–'}</b></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Tipp</div><span class="bt btb">${t.empfehlung||'–'}</span></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Quote</div><b>${t.quote?Number(t.quote).toFixed(2):'–'}</b></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Einsatz</div><b style="color:var(--am);">${t.empfohlener_einsatz?t.empfohlener_einsatz.toFixed(2)+'€':'–'}</b></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:7px;padding:8px;"><div style="color:var(--t3);margin-bottom:2px;">Pot. Gewinn</div><b style="color:var(--gr);">${t.empfohlener_einsatz&&t.quote?(t.empfohlener_einsatz*t.quote-t.empfohlener_einsatz).toFixed(2)+'€':'–'}</b></div>
       </div>
       ${t.begruendung?`<div style="margin-top:10px;font-size:12px;color:var(--t3);line-height:1.6;border-top:1px solid var(--bd);padding-top:8px;">${t.begruendung}</div>`:''}
     </div>`).join('');
 }
 
-// ── Verlauf ────────────────────────────────────────────────────────────────
 function renderVerlauf(){
   const el=document.getElementById('verlauf-content');
   let data=verlaufData;
-  if(verlaufFilter!=='alle') data=data.filter(w=>(w.status||'').toLowerCase()===verlaufFilter);
-  ['alle','gewonnen','verloren','offen'].forEach(f=>{
-    const b=document.getElementById('f-'+f.slice(0,3));
-    if(b)b.style.borderColor=verlaufFilter===f?'var(--gr)':'';
-    if(b)b.style.color=verlaufFilter===f?'var(--gr)':'';
-  });
+  if(verlaufFilter!=='alle')data=data.filter(w=>(w.status||'').toLowerCase()===verlaufFilter);
+  const map={alle:'alle',gewonnen:'gew',verloren:'ver',offen:'off'};
+  ['alle','gewonnen','verloren','offen'].forEach(f=>{const b=document.getElementById('f-'+map[f]);if(b){b.style.borderColor=verlaufFilter===f?'var(--gr)':'';b.style.color=verlaufFilter===f?'var(--gr)':'';}});
   if(!data.length){el.innerHTML=`<div class="empty"><div>Keine Wetten gefunden</div></div>`;return;}
   el.innerHTML=`
     <div class="tbl">
-      <div class="tbl-hd" style="grid-template-columns:75px 1fr 90px 52px 70px 75px 78px;">
-        <div>Datum</div><div>Spiel</div><div>Tipp</div><div>Quote</div><div>Einsatz</div><div>G/V</div><div>Status</div>
-      </div>
+      <div class="tbl-hd" style="grid-template-columns:85px 1fr 100px 55px 70px 75px 80px;"><div>Datum</div><div>Spiel</div><div>Tipp</div><div>Quote</div><div>Einsatz</div><div>G/V</div><div>Status</div></div>
       ${data.slice().reverse().map((w,i)=>{
         const s=(w.status||'').toLowerCase();
         const cls=s==='gewonnen'?'row-g':s==='verloren'?'row-r':s==='offen'?'row-o':'';
-        const gv=w.gewinn_verlust||0;
-        return `<div class="tbl-row ${cls}" style="grid-template-columns:75px 1fr 90px 52px 70px 75px 78px;animation:rowIn .3s ease forwards ${i*0.04}s;opacity:0;">
+        const gv=Number(w.gewinn_verlust)||0;
+        return `<div class="tbl-row ${cls}" style="grid-template-columns:85px 1fr 100px 55px 70px 75px 80px;animation:rowIn .3s ease forwards ${i*0.04}s;opacity:0;">
           <div style="color:var(--t3);">${w.datum||'–'}</div>
           <div style="font-weight:500;">${w.heim||''} vs ${w.gast||''}</div>
-          <div><span class="bt btb">${w.tipp||'–'}</span></div>
-          <div>${w.quote||'–'}</div>
-          <div>${w.einsatz?w.einsatz.toFixed(2)+'€':'–'}</div>
+          <div><span class="bt btb">${w.empfehlung||'–'}</span></div>
+          <div>${w.quote?Number(w.quote).toFixed(2):'–'}</div>
+          <div>${w.einsatz?Number(w.einsatz).toFixed(2)+'€':'–'}</div>
           <div style="color:${gv>0?'var(--gr)':gv<0?'var(--rd)':'var(--t3)'};">${gv!==0?fmtE(gv):'—'}</div>
           <div><span class="bt ${s==='gewonnen'?'btg':s==='verloren'?'btr':s==='offen'?'bto':'btx'}">${w.status||'–'}</span></div>
         </div>`;}).join('')}
@@ -638,24 +441,45 @@ function renderVerlauf(){
 }
 function filterWetten(f){verlaufFilter=f;renderVerlauf();}
 
-// ── Charts ─────────────────────────────────────────────────────────────────
-function initCharts(stats, gew, ver, off){
+function initCharts(stats,gew,ver,off){
   if(capChart){capChart.destroy();capChart=null;}
   if(winChart){winChart.destroy();winChart=null;}
-  const kv=stats.kapitalverlauf||[];
-  const labels=kv.map(k=>k.datum||'');
-  const values=kv.map(k=>k.kapital||0);
   const start=stats.startkapital||1000;
+  let labels=[],values=[];
+
+  // Priorität 1: explizites kapitalverlauf Feld vom Backend
+  if(Array.isArray(stats.kapitalverlauf)&&stats.kapitalverlauf.length>0){
+    labels=stats.kapitalverlauf.map(k=>k.datum||'');
+    values=stats.kapitalverlauf.map(k=>Number(k.kapital)||0);
+  }
+  // Priorität 2: aus alle_wetten laufend berechnen
+  else if(Array.isArray(stats.alle_wetten)&&stats.alle_wetten.length>0){
+    let laufend=start;
+    const wetten=stats.alle_wetten.filter(w=>w.status&&w.status!=='Offen');
+    if(wetten.length>0){
+      labels.push('Start');values.push(start);
+      wetten.forEach(w=>{
+        laufend+=(Number(w.gewinn_verlust)||0);
+        labels.push(w.datum||'');
+        values.push(Math.round(laufend*100)/100);
+      });
+    }else{
+      labels=['Start','Heute'];values=[start,stats.aktuelles_kapital||start];
+    }
+  } else {
+    labels=['Start','Heute'];values=[start,stats.aktuelles_kapital||start];
+  }
+
   const ctx1=document.getElementById('capChart');
-  if(ctx1) capChart=new Chart(ctx1,{type:'line',data:{labels,datasets:[
+  if(ctx1)capChart=new Chart(ctx1,{type:'line',data:{labels,datasets:[
     {data:labels.map(()=>start),borderColor:'rgba(255,255,255,0.08)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0},
     {data:values,borderColor:'#ff4060',backgroundColor:'rgba(255,64,96,0.07)',fill:true,tension:0.4,borderWidth:2,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:'#ff4060',pointHoverBorderColor:'#07091a',pointHoverBorderWidth:2}
-  ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1000,easing:'easeOutQuart'},plugins:{legend:{display:false},tooltip:{filter:i=>i.datasetIndex===1,callbacks:{label:c=>c.raw.toFixed(2)+'€'},backgroundColor:'rgba(11,15,34,0.95)',borderColor:'rgba(255,255,255,0.1)',borderWidth:1}},scales:{x:{ticks:{color:'rgba(255,255,255,0.2)',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},y:{ticks:{color:'rgba(255,255,255,0.2)',font:{size:9},callback:v=>v+'€'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}});
+  ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1000,easing:'easeOutQuart'},plugins:{legend:{display:false},tooltip:{filter:i=>i.datasetIndex===1,callbacks:{label:c=>Number(c.raw).toFixed(2)+'€'},backgroundColor:'rgba(11,15,34,0.95)',borderColor:'rgba(255,255,255,0.1)',borderWidth:1}},scales:{x:{ticks:{color:'rgba(255,255,255,0.2)',font:{size:9},maxTicksLimit:10},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},y:{ticks:{color:'rgba(255,255,255,0.2)',font:{size:9},callback:v=>v+'€'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}});
+
   const ctx2=document.getElementById('winChart');
-  if(ctx2&&(gew+ver+off>0)) winChart=new Chart(ctx2,{type:'doughnut',data:{labels:['Gewonnen','Verloren','Offen'],datasets:[{data:[gew,ver,off],backgroundColor:['#00e5a0','#ff4060','#ffb520'],borderWidth:0,hoverOffset:4}]},options:{responsive:false,cutout:'70%',animation:{duration:1000},plugins:{legend:{display:false}}}});
+  if(ctx2&&(gew+ver+off>0))winChart=new Chart(ctx2,{type:'doughnut',data:{labels:['Gewonnen','Verloren','Offen'],datasets:[{data:[gew,ver,off],backgroundColor:['#00e5a0','#ff4060','#ffb520'],borderWidth:0,hoverOffset:4}]},options:{responsive:false,cutout:'70%',animation:{duration:1000},plugins:{legend:{display:false}}}});
 }
 
-// ── Liga Manager ──────────────────────────────────────────────────────────
 function renderLigaManager(){
   const el=document.getElementById('liga-manager');
   el.innerHTML=Object.entries(ALLE_LIGEN).map(([gruppe,ligen])=>`
@@ -664,125 +488,28 @@ function renderLigaManager(){
       <div class="liga-list">
         ${ligen.map(l=>`
           <div class="liga-item">
-            <div class="liga-item-left">
-              <span class="liga-flag">${l.flag}</span>
-              <div><div class="liga-name">${l.name}</div><div class="liga-key">${l.key} · ~${l.credits} Credits/Tag</div></div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" ${aktiveLigen.has(l.key)?'checked':''} onchange="toggleLiga('${l.key}',this.checked)">
-              <div class="toggle-slider"></div>
-            </label>
+            <div class="liga-item-left"><span class="liga-flag">${l.flag}</span><div><div class="liga-name">${l.name}</div><div class="liga-key">${l.key} · ~${l.credits} Credits/Tag</div></div></div>
+            <label class="toggle"><input type="checkbox" ${aktiveLigen.has(l.key)?'checked':''} onchange="toggleLiga('${l.key}',this.checked)"><div class="toggle-slider"></div></label>
           </div>`).join('')}
       </div>
     </div>`).join('');
   updateCreditEstimate();
 }
+function toggleLiga(key,aktiv){if(aktiv)aktiveLigen.add(key);else aktiveLigen.delete(key);updateCreditEstimate();}
+function updateCreditEstimate(){let total=0;Object.values(ALLE_LIGEN).flat().forEach(l=>{if(aktiveLigen.has(l.key))total+=l.credits*30;});const el=document.getElementById('credit-estimate');if(el){el.textContent=total;el.style.color=total<=500?'var(--gr)':total<=800?'var(--am)':'var(--rd)';}}
+function speichereLigen(){localStorage.setItem('aktiveLigen',JSON.stringify([...aktiveLigen]));toast(`✅ ${aktiveLigen.size} Ligen gespeichert!`);}
 
-function toggleLiga(key, aktiv){
-  if(aktiv) aktiveLigen.add(key); else aktiveLigen.delete(key);
-  updateCreditEstimate();
-}
+async function starteAnalyse(){const btn=document.getElementById('btn-analyse');if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Läuft…';}try{const r=await fetch('/api/analyse-starten',{method:'POST'});const d=await r.json();toast('🔍 '+d.message);setTimeout(()=>ladeEmpfehlungen(),3000);}catch(e){toast('❌ Fehler: '+e.message,'var(--rd)');}finally{if(btn){btn.disabled=false;btn.innerHTML='🔍 Jetzt analysieren';}}}
+async function pruefeErgebnisse(){const btn=document.getElementById('btn-ergebnisse');if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Prüft…';}try{const r=await fetch('/api/ergebnisse-pruefen',{method:'POST'});const d=await r.json();document.getElementById('ergebnisse-result').innerHTML=`✅ Gewonnen: ${d.gewonnen} | ❌ Verloren: ${d.verloren} | 🔄 Aktualisiert: ${d.aktualisiert} | Tages G/V: ${fmtE(d.tages_gv)}`;toast('🏆 Ergebnis-Check abgeschlossen!');await ladeStatistik();}catch(e){toast('❌ Fehler: '+e.message,'var(--rd)');}finally{if(btn){btn.disabled=false;btn.innerHTML='Jetzt prüfen';}}}
+async function driveUpload(){const btn=document.getElementById('btn-drive');if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Wird hochgeladen…';}try{const r=await fetch('/api/drive-upload',{method:'POST'});const d=await r.json();toast('☁️ '+d.message);}catch(e){toast('❌ Fehler','var(--rd)');}finally{if(btn){btn.disabled=false;btn.innerHTML='☁️ Jetzt zu Google Drive hochladen';}}}
+async function whatsappTest(){const btn=document.getElementById('btn-wa');if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Sendet…';}try{const r=await fetch('/api/whatsapp-test',{method:'POST'});const d=await r.json();toast(d.message||'📱 Gesendet!');}catch(e){toast('❌ Fehler','var(--rd)');}finally{if(btn){btn.disabled=false;btn.innerHTML='📱 Test senden';}}}
+async function starteWochenAnalyse(){const btn=document.getElementById('btn-woche');btn.disabled=true;btn.innerHTML='<div class="spin"></div> Erstellt…';toast('📅 Wochenanalyse wird erstellt…');setTimeout(()=>{btn.disabled=false;btn.innerHTML='Jetzt erstellen';},2000);}
+async function starteMonatsAnalyse(){const btn=document.getElementById('btn-monat');btn.disabled=true;btn.innerHTML='<div class="spin"></div> Erstellt…';toast('🗓️ Monatsanalyse wird erstellt…');setTimeout(()=>{btn.disabled=false;btn.innerHTML='Jetzt erstellen';},2000);}
 
-function updateCreditEstimate(){
-  let total=0;
-  Object.values(ALLE_LIGEN).flat().forEach(l=>{if(aktiveLigen.has(l.key))total+=l.credits*30;});
-  const el=document.getElementById('credit-estimate');
-  if(el){el.textContent=total;el.style.color=total<=500?'var(--gr)':total<=800?'var(--am)':'var(--rd)';}
-}
+document.querySelectorAll('.tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));t.classList.add('on');document.getElementById('pane-'+t.dataset.t).classList.add('on');if(t.dataset.t==='statistik'&&!statsData)ladeStatistik();if(t.dataset.t==='verlauf'&&!verlaufData.length)ladeStatistik();if(t.dataset.t==='ligen')renderLigaManager();if(t.dataset.t==='drive')ladeStatus();});});
 
-function speichereLigen(){
-  localStorage.setItem('aktiveLigen', JSON.stringify([...aktiveLigen]));
-  toast(`✅ ${aktiveLigen.size} Ligen gespeichert! Nächste Analyse nutzt diese Auswahl.`);
-}
-
-// ── Actions ────────────────────────────────────────────────────────────────
-async function starteAnalyse(){
-  const btn=document.getElementById('btn-analyse');
-  if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Läuft…';}
-  try{
-    const r=await fetch('/api/analyse-starten',{method:'POST'});
-    const d=await r.json();
-    toast('🔍 '+d.message);
-    setTimeout(()=>ladeEmpfehlungen(),3000);
-  }catch(e){toast('❌ Fehler: '+e.message,'var(--rd)');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='🔍 Jetzt analysieren';}}
-}
-
-async function pruefeErgebnisse(){
-  const btn=document.getElementById('btn-ergebnisse');
-  if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Prüft…';}
-  try{
-    const r=await fetch('/api/ergebnisse-pruefen',{method:'POST'});
-    const d=await r.json();
-    document.getElementById('ergebnisse-result').innerHTML=
-      `✅ Gewonnen: ${d.gewonnen} | ❌ Verloren: ${d.verloren} | 🔄 Aktualisiert: ${d.aktualisiert} | Tages G/V: ${fmtE(d.tages_gv)}`;
-    toast('🏆 Ergebnis-Check abgeschlossen!');
-    await ladeStatistik();
-  }catch(e){toast('❌ Fehler: '+e.message,'var(--rd)');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='Jetzt prüfen';}}
-}
-
-async function driveUpload(){
-  const btn=document.getElementById('btn-drive');
-  if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Wird hochgeladen…';}
-  try{
-    const r=await fetch('/api/drive-upload',{method:'POST'});
-    const d=await r.json();
-    toast('☁️ '+d.message);
-  }catch(e){toast('❌ Fehler','var(--rd)');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='☁️ Jetzt zu Google Drive hochladen';}}
-}
-
-async function whatsappTest(){
-  const btn=document.getElementById('btn-wa');
-  if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Sendet…';}
-  try{
-    const r=await fetch('/api/whatsapp-test',{method:'POST'});
-    const d=await r.json();
-    toast(d.message||'📱 Gesendet!');
-  }catch(e){toast('❌ Fehler','var(--rd)');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='📱 Test senden';}}
-}
-
-async function starteWochenAnalyse(){
-  const btn=document.getElementById('btn-woche');
-  btn.disabled=true;btn.innerHTML='<div class="spin"></div> Erstellt…';
-  toast('📅 Wochenanalyse wird erstellt…');
-  btn.disabled=false;btn.innerHTML='Jetzt erstellen';
-}
-async function starteMonatsAnalyse(){
-  const btn=document.getElementById('btn-monat');
-  btn.disabled=true;btn.innerHTML='<div class="spin"></div> Erstellt…';
-  toast('🗓️ Monatsanalyse wird erstellt…');
-  btn.disabled=false;btn.innerHTML='Jetzt erstellen';
-}
-
-// ── Tab Navigation ─────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(t=>{
-  t.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-    document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
-    t.classList.add('on');
-    document.getElementById('pane-'+t.dataset.t).classList.add('on');
-    if(t.dataset.t==='statistik' && !statsData) ladeStatistik();
-    if(t.dataset.t==='verlauf' && !verlaufData.length) ladeStatistik();
-    if(t.dataset.t==='ligen') renderLigaManager();
-    if(t.dataset.t==='drive') ladeStatus();
-  });
-});
-
-// ── Init ───────────────────────────────────────────────────────────────────
-(async()=>{
-  await ladeStatus();
-  await ladeEmpfehlungen();
-  await ladeStatistik();
-})();
-
-// Auto-refresh alle 60 Sekunden
-setInterval(async()=>{
-  await ladeEmpfehlungen();
-  await ladeStatistik();
-}, 60000);
+(async()=>{await ladeStatus();await ladeEmpfehlungen();await ladeStatistik();})();
+setInterval(async()=>{await ladeEmpfehlungen();await ladeStatistik();},60000);
 </script>
 </body>
 </html>
