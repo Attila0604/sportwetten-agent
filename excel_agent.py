@@ -131,7 +131,6 @@ def _sheet_statistik(ws):
         (12,"Durchschn. Quote"),(13,"Durchschn. Einsatz"),(14,"Beste Wette"),(15,"Schlechteste Wette"),
     ]
     formeln = {
-        # FIX Bug 3: STARTKAPITAL als float speichern, nicht als str → verhindert #WERT!
         3: STARTKAPITAL,
         4: "=C3+SUM('Meine Wetten'!N3:N10000)",
         5: "=C4-C3", 6: "=IF(C3>0,(C4-C3)/C3*100,0)",
@@ -164,7 +163,6 @@ def _sheet_statistik(ws):
 # ─── DUPLIKAT-HELPER ──────────────────────────────────────────────────────────
 
 def _empfehlung_existiert(ws, datum: str, heim: str, gast: str) -> bool:
-    """Prüft ob eine Empfehlung für Heim+Gast bereits existiert (datum-unabhängig)"""
     for row in ws.iter_rows(min_row=3, values_only=True):
         if (str(row[2] or "").strip().lower() == heim.strip().lower() and
                 str(row[3] or "").strip().lower() == gast.strip().lower()):
@@ -173,7 +171,6 @@ def _empfehlung_existiert(ws, datum: str, heim: str, gast: str) -> bool:
 
 
 def _wette_existiert(ws, datum: str, heim: str, gast: str) -> bool:
-    """Prüft ob eine Wette für Heim+Gast bereits existiert (datum-unabhängig)"""
     for row in ws.iter_rows(min_row=3, values_only=True):
         if (str(row[2] or "").strip().lower() == heim.strip().lower() and
                 str(row[3] or "").strip().lower() == gast.strip().lower()):
@@ -199,7 +196,6 @@ def empfehlungen_hinzufuegen(result: dict, datum: str = None):
         heim = emp.get("heim", "")
         gast = emp.get("gast", "")
 
-        # FIX Bug 1: Duplikat-Check — gleiche Empfehlung nicht doppelt eintragen
         if _empfehlung_existiert(ws, heute, heim, gast):
             print(f"  ⏭ Duplikat übersprungen: {heim} vs {gast}")
             uebersprungen += 1
@@ -247,7 +243,6 @@ def top3_als_wetten_eintragen(top3: list, aktuelles_kapital: float, datum: str =
         heim = emp.get("heim", "")
         gast = emp.get("gast", "")
 
-        # FIX Bug 2: Duplikat-Check — gleiche Wette nicht doppelt eintragen
         if _wette_existiert(ws, heute, heim, gast):
             print(f"  ⏭ Wett-Duplikat übersprungen: {heim} vs {gast}")
             uebersprungen += 1
@@ -337,6 +332,37 @@ def wette_aktualisieren(zeile_idx: int, endstand: str, ergebnis: str, gewinn_ver
         sz.font = Font(name="Arial",bold=True,color=WEISS,size=10)
     wb.save(EXCEL_PATH)
 
+
+# ─── NEU: Kapitalverlauf aus Excel lesen ──────────────────────────────────────
+
+def _lese_kapitalverlauf() -> list:
+    """Liest das Kapital-Sheet aus und gibt Liste mit {datum, kapital, tagesgewinn} zurück.
+    Wenn leer oder nicht vorhanden → [] (Frontend macht dann Fallback aus Wetten)."""
+    try:
+        if not os.path.exists(EXCEL_PATH):
+            return []
+        wb = load_workbook(EXCEL_PATH, data_only=True)
+        if "Kapital" not in wb.sheetnames:
+            return []
+        ws = wb["Kapital"]
+        verlauf = []
+        for row in ws.iter_rows(min_row=3, values_only=True):
+            if row[0] is None or row[1] is None:
+                continue
+            try:
+                verlauf.append({
+                    "datum": str(row[0]),
+                    "kapital": float(row[1]),
+                    "tagesgewinn": float(row[2] or 0),
+                })
+            except (ValueError, TypeError):
+                continue
+        return verlauf
+    except Exception as e:
+        print(f"  ⚠ Kapitalverlauf lesen Fehler: {e}")
+        return []
+
+
 def get_statistik() -> dict:
     if not os.path.exists(EXCEL_PATH):
         erstelle_excel()
@@ -367,6 +393,7 @@ def get_statistik() -> dict:
             "roi":round(ges_gv/STARTKAPITAL*100,2) if STARTKAPITAL>0 else 0,
             "startkapital":STARTKAPITAL,"aktuelles_kapital":round(STARTKAPITAL+ges_gv,2),
             "letzte_wetten":wetten[-10:][::-1],"alle_wetten":wetten,
+            "kapitalverlauf": _lese_kapitalverlauf(),  # NEU: für Chart im Dashboard
         }
     except Exception as e:
         print(f"Statistik-Fehler: {e}")
@@ -380,5 +407,5 @@ def _leer():
         "gesamt_wetten":0,"gewonnen":0,"verloren":0,"offen":0,
         "trefferquote":0,"gesamt_einsatz":0,"gesamt_gv":0,"roi":0,
         "startkapital":STARTKAPITAL,"aktuelles_kapital":STARTKAPITAL,
-        "letzte_wetten":[],"alle_wetten":[],
+        "letzte_wetten":[],"alle_wetten":[],"kapitalverlauf":[],
     }
