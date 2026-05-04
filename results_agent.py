@@ -1,8 +1,15 @@
 """
 Ergebnis-Agent — prüft täglich ob Wetten gewonnen oder verloren haben
 Läuft täglich um 10:00 Uhr und aktualisiert die Excel-Datei automatisch
+
+REWRITE 04.05.2026:
+  - FIX 5: _aehnlich war zu lasch (z.B. "Bayer" matchte "Bayern", "Wien" matchte "Wien")
+           → strikteres Matching via difflib + Alias-Tabelle
+  - FIX 6: Score-Positions-Fallback entfernt (Reihenfolge laut Odds API NICHT garantiert!)
+  - FIX 7: Debug-Warnungen entrümpelt (max. 1 pro Bet statt pro API-Treffer)
 """
 import os
+import difflib
 import httpx
 from datetime import datetime, date, timedelta
 
@@ -19,6 +26,116 @@ SOCCER_SPORTS = [
     "soccer_uefa_champs_league",
     "soccer_austria_bundesliga",
 ]
+
+# Alias-Tabelle: Teams, die in Wetten und API unterschiedlich heißen.
+# Schreibweise EGAL — wird beim Lookup normalisiert.
+# Bei weiteren Mismatches einfach hier ergänzen.
+TEAM_ALIASES = [
+    # --- Österreich Bundesliga ---
+    {"RB Salzburg", "FC Red Bull Salzburg", "Red Bull Salzburg"},
+    {"Rapid Wien", "SK Rapid Wien", "SK Rapid"},
+    {"Austria Wien", "FK Austria Wien", "FK Austria"},
+    {"Sturm Graz", "SK Sturm Graz"},
+    {"WSG Tirol", "WSG Swarovski Tirol"},
+    {"LASK", "LASK Linz", "Linzer ASK"},
+    {"Austria Klagenfurt", "SK Austria Klagenfurt"},
+    {"Blau-Weiß Linz", "FC Blau-Weiß Linz"},
+    {"TSV Hartberg", "Hartberg"},
+    {"Wolfsberger AC", "WAC", "Wolfsberg"},
+    {"Rheindorf Altach", "SCR Altach", "Altach"},
+    # --- Deutschland Bundesliga (häufige Stolperfallen) ---
+    {"Bayer Leverkusen", "Bayer 04 Leverkusen"},
+    {"Bayern München", "FC Bayern München", "Bayern Munich"},
+    {"Borussia Dortmund", "BVB Dortmund", "BV Borussia 09 Dortmund"},
+    {"Borussia Mönchengladbach", "Borussia M'gladbach", "Bor. Mönchengladbach"},
+    {"1. FC Köln", "FC Köln"},
+    {"1. FC Kaiserslautern", "FCK Kaiserslautern"},
+    # --- Spanien (häufige "Real"/"Atletico" Verwechslungen) ---
+    {"Real Madrid", "Real Madrid CF"},
+    {"Real Sociedad", "Real Sociedad de Fútbol"},
+    {"Atlético Madrid", "Atletico Madrid", "Club Atlético de Madrid"},
+    {"Athletic Bilbao", "Athletic Club"},
+    # --- England (häufige "Manchester"/"United" Verwechslungen) ---
+    {"Manchester United", "Man United", "Man Utd"},
+    {"Manchester City", "Man City"},
+    {"Newcastle United", "Newcastle"},
+    {"West Ham United", "West Ham"},
+    {"Tottenham Hotspur", "Tottenham", "Spurs"},
+]
+
+
+def _normalisiere(name: str) -> str:
+    """Normalisiert Teamnamen: lowercase, Umlaute, Sonderzeichen, Präfixe entfernen"""
+    if not name:
+        return ""
+    name = name.lower().strip()
+    # Umlaute & ß
+    name = name.replace("ä", "a").replace("ö", "o").replace("ü", "u")
+    name = name.replace("ae", "a").replace("oe", "o").replace("ue", "u")
+    name = name.replace("ß", "ss")
+    # Apostrophe und Akzente vereinfachen
+    name = name.replace("é", "e").replace("è", "e").replace("á", "a").replace("í", "i")
+    # Häufige Präfixe entfernen (längere zuerst, nur einer wird abgeschnitten)
+    for prefix in [
+        "1. fc ", "1.fc ", "1 fc ",
+        "fc ", "sc ", "sv ", "vfl ", "vfb ", "bv ", "tsv ", "fsv ",
+        "sk ", "fk ", "wsg ", "rb ", "ask ", "atv ", "as ", "ac ",
+    ]:
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+            break
+    # Häufige Suffixe entfernen
+    for suffix in [" fc", " sc", " sv", " cf", " ac"]:
+        if name.endswith(suffix):
+            name = name[: -len(suffix)]
+    # Restliche Sonderzeichen
+    name = name.replace(".", "").replace("-", " ").replace("'", "").replace("/", " ")
+    # Mehrfache Whitespaces zusammenführen
+    name = " ".join(name.split())
+    return name
+
+
+# Aliase einmalig vornormalisieren für schnellen Lookup
+_NORMALIZED_ALIAS_GROUPS = [
+    {_normalisiere(n) for n in gruppe} for gruppe in TEAM_ALIASES
+]
+
+
+def _alias_match(na: str, nb: str) -> bool:
+    """Prüft, ob zwei normalisierte Namen über die Alias-Tabelle gematcht werden."""
+    for gruppe in _NORMALIZED_ALIAS_GROUPS:
+        if na in gruppe and nb in gruppe:
+            return True
+    return False
+
+
+def _aehnlich(a: str, b: str, schwelle: float = 0.85) -> bool:
+    """
+    Prüft ob zwei Teamnamen das gleiche Team bezeichnen.
+    
+    DEUTLICH STRENGER als die alte Version:
+    - Kein 4-Zeichen-Wort-Matching mehr ("Bayer"↔"Bayern", "Wien"↔"Wien" → früher TRUE!)
+    - Substring nur bei mind. 70% Längen-Verhältnis (verhindert "RB"↔"Rapid Bilbao")
+    - Zusätzlich Alias-Tabelle für bekannte Schreibvariationen
+    """
+    na, nb = _normalisiere(a), _normalisiere(b)
+    if not na or not nb:
+        return False
+    # 1. Exakt gleich nach Normalisierung
+    if na == nb:
+        return True
+    # 2. Bekannter Alias
+    if _alias_match(na, nb):
+        return True
+    # 3. Substring NUR bei beidseitig ≥ 6 Zeichen UND ≥ 70% Längen-Verhältnis
+    if len(na) >= 6 and len(nb) >= 6:
+        kurz, lang = (na, nb) if len(na) <= len(nb) else (nb, na)
+        if kurz in lang and len(kurz) / len(lang) >= 0.70:
+            return True
+    # 4. Difflib-Fuzzy-Match (fängt Tippfehler & kleine Schreibvarianten ab)
+    if difflib.SequenceMatcher(None, na, nb).ratio() >= schwelle:
+        return True
+    return False
 
 
 async def hole_ergebnisse(sport: str) -> list:
@@ -51,92 +168,66 @@ async def hole_alle_ergebnisse() -> list:
     return alle
 
 
-def _normalisiere(name: str) -> str:
-    """Normalisiert Teamnamen: Umlaute, Sonderzeichen, Präfixe entfernen"""
-    name = name.lower().strip()
-    # Umlaute ersetzen
-    name = name.replace("ä", "a").replace("ö", "o").replace("ü", "u")
-    name = name.replace("ae", "a").replace("oe", "o").replace("ue", "u")
-    name = name.replace("ß", "ss")
-    # Häufige Präfixe/Suffixe entfernen
-    for prefix in ["1. fc ", "fc ", "sc ", "sv ", "vfl ", "vfb ", "bv ", "tsv ", "fsv "]:
-        if name.startswith(prefix):
-            name = name[len(prefix):]
-    name = name.replace(" fc", "").replace(" sc", "").replace(" sv", "")
-    name = name.replace(".", "").replace("-", " ").strip()
-    return name
-
-
-def _aehnlich(a: str, b: str) -> bool:
-    """Prüft ob zwei Teamnamen ähnlich sind"""
-    # Normalisierte Versionen vergleichen
-    na, nb = _normalisiere(a), _normalisiere(b)
-    if na == nb:
-        return True
-    if na in nb or nb in na:
-        return True
-    # Wort-für-Wort Matching
-    a_words = na.split()
-    b_words = nb.split()
-    for wa in a_words:
-        for wb in b_words:
-            if len(wa) > 3 and len(wb) > 3 and (wa in wb or wb in wa):
-                return True
-    return False
-
-
 def finde_ergebnis(heim: str, gast: str, ergebnisse: list) -> dict:
     """Sucht das Ergebnis für ein bestimmtes Spiel"""
-    heim_lower = heim.lower().strip()
-    gast_lower = gast.lower().strip()
+    bester_kandidat = None  # Für eine einzelne Debug-Zeile, falls nichts matcht
 
     for spiel in ergebnisse:
-        spiel_heim = spiel.get("home_team", "").lower().strip()
-        spiel_gast = spiel.get("away_team", "").lower().strip()
+        spiel_heim = spiel.get("home_team", "")
+        spiel_gast = spiel.get("away_team", "")
 
-        heim_match = (heim_lower in spiel_heim or spiel_heim in heim_lower or
-                      _aehnlich(heim_lower, spiel_heim))
-        gast_match = (gast_lower in spiel_gast or spiel_gast in gast_lower or
-                      _aehnlich(gast_lower, spiel_gast))
+        heim_match = _aehnlich(heim, spiel_heim)
+        gast_match = _aehnlich(gast, spiel_gast)
 
-        # Debug-Ausgabe wenn fast ein Match
-        if heim_match and not gast_match:
-            print(f"  ⚡ Heim-Match aber kein Gast: '{gast_lower}' vs '{spiel_gast}'")
+        # Bester Heim-Treffer ohne Gast-Match merken (max. einer pro Bet)
+        if heim_match and not gast_match and bester_kandidat is None:
+            bester_kandidat = (spiel_heim, spiel_gast)
 
-        if heim_match and gast_match and spiel.get("completed"):
-            scores = spiel.get("scores") or []
-            if len(scores) >= 2:
-                heim_score = None
-                gast_score = None
+        if not (heim_match and gast_match):
+            continue
+        if not spiel.get("completed"):
+            continue
 
-                # FIX Bug 2: Score-Parsing war fehlerhaft, jetzt beide Teams explizit prüfen
-                for s in scores:
-                    name = s.get("name", "").lower().strip()
-                    name_match_heim = (name in spiel_heim or spiel_heim in name or
-                                       _aehnlich(name, spiel_heim))
-                    name_match_gast = (name in spiel_gast or spiel_gast in name or
-                                       _aehnlich(name, spiel_gast))
+        scores = spiel.get("scores") or []
+        if len(scores) < 2:
+            continue
 
-                    if name_match_heim:
-                        heim_score = s.get("score")
-                    elif name_match_gast:
-                        gast_score = s.get("score")
+        # FIX Bug 6: Score-Parsing STRIKT über Namen — kein Positions-Fallback mehr.
+        # Die Odds API garantiert die Reihenfolge der scores nicht!
+        heim_score = None
+        gast_score = None
+        for s in scores:
+            name = s.get("name", "")
+            if heim_score is None and _aehnlich(name, spiel_heim):
+                heim_score = s.get("score")
+            elif gast_score is None and _aehnlich(name, spiel_gast):
+                gast_score = s.get("score")
 
-                # Fallback: Wenn Matching fehlschlägt, Reihenfolge nutzen
-                if heim_score is None and len(scores) >= 1:
-                    heim_score = scores[0].get("score")
-                if gast_score is None and len(scores) >= 2:
-                    gast_score = scores[1].get("score")
+        if heim_score is None or gast_score is None:
+            print(f"  ⚠ Score-Parsing fehlgeschlagen: {spiel_heim} vs {spiel_gast}")
+            continue
 
-                if heim_score is not None and gast_score is not None:
-                    return {
-                        "heim": spiel.get("home_team"),
-                        "gast": spiel.get("away_team"),
-                        "heim_score": int(heim_score),
-                        "gast_score": int(gast_score),
-                        "endstand": f"{heim_score}:{gast_score}",
-                        "abgeschlossen": True,
-                    }
+        try:
+            heim_score = int(heim_score)
+            gast_score = int(gast_score)
+        except (ValueError, TypeError):
+            print(f"  ⚠ Score nicht numerisch: {spiel_heim} vs {spiel_gast}")
+            continue
+
+        return {
+            "heim": spiel_heim,
+            "gast": spiel_gast,
+            "heim_score": heim_score,
+            "gast_score": gast_score,
+            "endstand": f"{heim_score}:{gast_score}",
+            "abgeschlossen": True,
+        }
+
+    # FIX Bug 7: Nur EINE Debug-Zeile pro Bet, statt eine pro API-Game
+    if bester_kandidat:
+        sh, sg = bester_kandidat
+        print(f"  ⚡ Kein Match für '{heim} vs {gast}' (ähnlich gefunden: '{sh} vs {sg}')")
+
     return {}
 
 
@@ -161,7 +252,6 @@ def berechne_gewinn_verlust(status: str, einsatz: float, quote: float) -> float:
 def aktualisiere_kapital_sheet(ws_kapital, heute: date, tages_gv: float,
                                 kapital_vorher: float, anzahl_wetten: int):
     """Schreibt täglichen Kapitalstand ins Kapital-Sheet"""
-    # Nächste leere Zeile finden (ab Zeile 3, da Zeile 1+2 Header)
     naechste_zeile = 3
     for row in range(3, ws_kapital.max_row + 2):
         if ws_kapital.cell(row=row, column=1).value is None:
@@ -207,7 +297,7 @@ async def ergebnisse_aktualisieren() -> dict:
     gewonnen = 0
     verloren = 0
     tages_gv = 0.0
-    kapital_aktuell = 1000.0  # Startkapital
+    kapital_aktuell = 1000.0  # Startkapital-Fallback
 
     # Aktuelles Kapital aus letztem Kapital-Eintrag lesen
     for row in range(ws_kapital.max_row, 2, -1):
@@ -215,7 +305,7 @@ async def ergebnisse_aktualisieren() -> dict:
         if val is not None:
             try:
                 kapital_aktuell = float(val)
-            except:
+            except (ValueError, TypeError):
                 pass
             break
 
@@ -238,42 +328,44 @@ async def ergebnisse_aktualisieren() -> dict:
 
         ergebnis = finde_ergebnis(str(heim), str(gast), alle_ergebnisse)
 
-        if ergebnis.get("abgeschlossen"):
-            heim_score = ergebnis["heim_score"]
-            gast_score = ergebnis["gast_score"]
-            endstand = ergebnis["endstand"]
+        if not ergebnis.get("abgeschlossen"):
+            continue
 
-            wett_status = berechne_wett_ergebnis(str(empfehlung), heim_score, gast_score)
-            gv = berechne_gewinn_verlust(wett_status, float(einsatz), float(quote))
-            tages_gv += gv
+        heim_score = ergebnis["heim_score"]
+        gast_score = ergebnis["gast_score"]
+        endstand = ergebnis["endstand"]
 
-            # Spalte 12: Endstand (z.B. "2:1")
-            ws.cell(row=row_idx, column=12).value = endstand
+        wett_status = berechne_wett_ergebnis(str(empfehlung), heim_score, gast_score)
+        gv = berechne_gewinn_verlust(wett_status, float(einsatz), float(quote))
+        tages_gv += gv
 
-            # Spalte 13: Vollständiger Spielstand
-            ws.cell(row=row_idx, column=13).value = f"{heim} {heim_score}:{gast_score} {gast}"
+        # Spalte 12: Endstand (z.B. "2:1")
+        ws.cell(row=row_idx, column=12).value = endstand
 
-            # Spalte 14: G/V EUR
-            gv_z = ws.cell(row=row_idx, column=14)
-            gv_z.value = gv
-            gv_z.number_format = '#,##0.00'
-            gv_z.font = Font(name="Arial", bold=True, size=10,
-                             color=GRUEN if gv > 0 else ROT)
+        # Spalte 13: Vollständiger Spielstand
+        ws.cell(row=row_idx, column=13).value = f"{heim} {heim_score}:{gast_score} {gast}"
 
-            # Spalte 15: Status
-            sz = ws.cell(row=row_idx, column=15)
-            sz.value = wett_status
-            if wett_status == "Gewonnen":
-                sz.fill = PatternFill("solid", start_color=GRUEN)
-                sz.font = Font(name="Arial", bold=True, color=WEISS, size=10)
-                gewonnen += 1
-            else:
-                sz.fill = PatternFill("solid", start_color=ROT)
-                sz.font = Font(name="Arial", bold=True, color=WEISS, size=10)
-                verloren += 1
+        # Spalte 14: G/V EUR
+        gv_z = ws.cell(row=row_idx, column=14)
+        gv_z.value = gv
+        gv_z.number_format = '#,##0.00'
+        gv_z.font = Font(name="Arial", bold=True, size=10,
+                         color=GRUEN if gv > 0 else ROT)
 
-            aktualisiert += 1
-            print(f"  ✓ {heim} vs {gast}: {endstand} → {wett_status} ({gv:+.2f}€)")
+        # Spalte 15: Status
+        sz = ws.cell(row=row_idx, column=15)
+        sz.value = wett_status
+        if wett_status == "Gewonnen":
+            sz.fill = PatternFill("solid", start_color=GRUEN)
+            sz.font = Font(name="Arial", bold=True, color=WEISS, size=10)
+            gewonnen += 1
+        else:
+            sz.fill = PatternFill("solid", start_color=ROT)
+            sz.font = Font(name="Arial", bold=True, color=WEISS, size=10)
+            verloren += 1
+
+        aktualisiert += 1
+        print(f"  ✓ {heim} vs {gast}: {endstand} → {wett_status} ({gv:+.2f}€)")
 
     # FIX Bug 3: Kapital-Sheet befüllen wenn Wetten aktualisiert wurden
     if aktualisiert > 0:
