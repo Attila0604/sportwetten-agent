@@ -26,6 +26,7 @@ MIN_BOOKIE       = int(  os.getenv("MIN_BUCHMACHER",   "5"))
 BOOKIE_OUTLIER   = float(os.getenv("BOOKIE_OUTLIER",   "0.20"))
 
 SPORT_KEYS = [
+    "soccer_fifa_world_cup",
     "soccer_epl",
     "soccer_germany_bundesliga",
     "soccer_spain_la_liga",
