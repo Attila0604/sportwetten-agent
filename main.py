@@ -20,6 +20,7 @@ from excel_agent import (
 from gdrive_agent import excel_zu_drive_hochladen
 from whatsapp_agent import sende_tipps, sende_wochen_stats
 from results_agent import ergebnisse_aktualisieren
+from data_import import importiere   # Weg B: Historien-Import
 
 _cache = {
     "datum": None, "alle_empfehlungen": [], "top3": [],
@@ -258,6 +259,13 @@ async def status():
         "naechste_analyse":     "21:00 Uhr",
         "naechster_ergebnis_check": "10:00 Uhr",
     }
+
+@app.get("/import-historie")
+async def import_historie(secret: str = ""):
+    """Weg B: einmaliger Historien-Import in Supabase. Per Browser auslösen."""
+    if secret != os.getenv("IMPORT_SECRET", ""):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return await importiere(seasons=["2023", "2024"])
 
 @app.post("/run-analysis")
 async def run_analysis(bg: BackgroundTasks):
