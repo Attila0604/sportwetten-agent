@@ -38,6 +38,7 @@ MIN_BOOKIE   = int(  os.getenv("MIN_BUCHMACHER", "5"))      # vorher 3 – 5 mac
 ALLOW_DRAW   = os.getenv("ALLOW_DRAW", "false").lower() == "true"  # Draws sind Gift in den Daten
 
 ERLAUBTE_LIGEN = [
+    "Soccer Fifa World Cup",
     "Soccer Epl",
     "Soccer Germany Bundesliga",
     "Soccer Spain La Liga",
