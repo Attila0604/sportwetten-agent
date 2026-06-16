@@ -21,6 +21,7 @@ from gdrive_agent import excel_zu_drive_hochladen
 from whatsapp_agent import sende_tipps, sende_wochen_stats
 from results_agent import ergebnisse_aktualisieren
 from data_import import importiere   # Weg B: Historien-Import
+from predict import prognose          # Weg B: Poisson-Prognose
 
 _cache = {
     "datum": None, "alle_empfehlungen": [], "top3": [],
@@ -266,6 +267,15 @@ async def import_historie(secret: str = ""):
     if secret != os.getenv("IMPORT_SECRET", ""):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     return await importiere(seasons=["2023", "2024"])
+
+@app.get("/prognose")
+async def prognose_endpoint(home: str, away: str, league: str = "PL",
+                            quote_heim: float = None,
+                            quote_remis: float = None,
+                            quote_gast: float = None):
+    """Weg B: Poisson-Prognose für ein Spiel. Quoten optional -> zeigt Edge."""
+    return await prognose(home, away, league,
+                          quote_heim, quote_remis, quote_gast)
 
 @app.post("/run-analysis")
 async def run_analysis(bg: BackgroundTasks):
