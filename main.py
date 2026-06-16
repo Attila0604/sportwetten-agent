@@ -22,6 +22,7 @@ from whatsapp_agent import sende_tipps, sende_wochen_stats
 from results_agent import ergebnisse_aktualisieren
 from data_import import importiere   # Weg B: Historien-Import
 from predict import prognose          # Weg B: Poisson-Prognose
+from backtest import backtest         # Weg B: Out-of-Sample-Test
 
 _cache = {
     "datum": None, "alle_empfehlungen": [], "top3": [],
@@ -277,6 +278,11 @@ async def prognose_endpoint(home: str, away: str, league: str = "PL",
     """Weg B: Poisson-Prognose für ein Spiel. Quoten optional -> zeigt Edge."""
     return await prognose(home, away, league,
                           quote_heim, quote_remis, quote_gast)
+
+@app.get("/backtest")
+async def backtest_endpoint(league: str = "PL", test_season: str = "2025"):
+    """Weg B: Out-of-Sample-Test des Modells gegen eine naive Basis."""
+    return await backtest(league, test_season)
 
 @app.post("/run-analysis")
 async def run_analysis(bg: BackgroundTasks):
