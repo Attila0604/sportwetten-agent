@@ -16,17 +16,22 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
 
 async def _lade_liga_matches(client: httpx.AsyncClient, league: str) -> list:
-    """Holt alle Spiele einer Liga aus Supabase (eine Liga < 1000 Zeilen)."""
+    """Holt ALLE Spiele einer Liga aus Supabase – mit Pagination (max. 1000/Anfrage)."""
     url = f"{SUPABASE_URL}/rest/v1/matches"
-    params = {
-        "select": "match_date,home,away,home_goals,away_goals",
-        "league": f"eq.{league}",
-        "limit": "5000",
-    }
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-    r = await client.get(url, params=params, headers=headers, timeout=30)
-    r.raise_for_status()
-    return r.json()
+    alle, offset = [], 0
+    while True:
+        params = {"select": "match_date,home,away,home_goals,away_goals",
+                  "league": f"eq.{league}", "order": "id",
+                  "limit": "1000", "offset": str(offset)}
+        r = await client.get(url, params=params, headers=headers, timeout=30)
+        r.raise_for_status()
+        batch = r.json()
+        alle.extend(batch)
+        if len(batch) < 1000:
+            break
+        offset += 1000
+    return alle
 
 
 async def prognose(home: str, away: str, league: str = "PL",
