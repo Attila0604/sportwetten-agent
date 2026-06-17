@@ -19,7 +19,7 @@ async def _lade_liga_matches(client: httpx.AsyncClient, league: str) -> list:
     """Holt alle Spiele einer Liga aus Supabase (eine Liga < 1000 Zeilen)."""
     url = f"{SUPABASE_URL}/rest/v1/matches"
     params = {
-        "select": "home,away,home_goals,away_goals",
+        "select": "match_date,home,away,home_goals,away_goals",
         "league": f"eq.{league}",
         "limit": "5000",
     }
