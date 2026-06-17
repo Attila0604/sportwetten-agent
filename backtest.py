@@ -28,7 +28,7 @@ def _outcome(hg: int, ag: int) -> str:
 
 async def _lade_matches(client, league):
     url = f"{SUPABASE_URL}/rest/v1/matches"
-    params = {"select": "season,home,away,home_goals,away_goals",
+    params = {"select": "season,match_date,home,away,home_goals,away_goals",
               "league": f"eq.{league}", "limit": "10000"}
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
     r = await client.get(url, params=params, headers=headers, timeout=60)
@@ -61,7 +61,8 @@ def _metriken(vorhersagen: list) -> dict:
     }
 
 
-async def backtest(league: str = "PL", test_season: str = "2025") -> dict:
+async def backtest(league: str = "PL", test_season: str = "2025",
+                   half_life: float = 240.0, shrink: float = 6.0) -> dict:
     if not (SUPABASE_URL and SUPABASE_KEY):
         return {"ok": False, "error": "SUPABASE_URL / SUPABASE_KEY fehlen"}
 
@@ -74,7 +75,7 @@ async def backtest(league: str = "PL", test_season: str = "2025") -> dict:
         return {"ok": False, "error": f"Zu wenig Daten (train={len(train)}, test={len(test)})"}
 
     # Modell trainieren
-    ratings = fit_team_ratings(train)
+    ratings = fit_team_ratings(train, half_life_days=half_life, shrink=shrink)
 
     # Basisraten aus Training (naive Vergleichsbasis)
     bh = sum(1 for m in train if _outcome(m["home_goals"], m["away_goals"]) == "heim") / len(train)
@@ -98,6 +99,7 @@ async def backtest(league: str = "PL", test_season: str = "2025") -> dict:
     return {
         "ok": True,
         "liga": league,
+        "parameter": {"half_life_days": half_life, "shrink": shrink},
         "trainiert_auf": f"{len(train)} Spiele (ohne Saison {test_season})",
         "getestet_auf":  f"{len(test)} Spiele (Saison {test_season})",
         "modell":   modell,
