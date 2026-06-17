@@ -280,9 +280,10 @@ async def prognose_endpoint(home: str, away: str, league: str = "PL",
                           quote_heim, quote_remis, quote_gast)
 
 @app.get("/backtest")
-async def backtest_endpoint(league: str = "PL", test_season: str = "2025"):
-    """Weg B: Out-of-Sample-Test des Modells gegen eine naive Basis."""
-    return await backtest(league, test_season)
+async def backtest_endpoint(league: str = "PL", test_season: str = "2025",
+                            half_life: float = 240.0, shrink: float = 6.0):
+    """Weg B: Out-of-Sample-Test. half_life/shrink per URL tunebar."""
+    return await backtest(league, test_season, half_life, shrink)
 
 @app.post("/run-analysis")
 async def run_analysis(bg: BackgroundTasks):
