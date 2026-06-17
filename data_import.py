@@ -25,11 +25,17 @@ FD_BASE = "https://api.football-data.org/v4"
 
 # Gratis-Ligen bei football-data.org (Code -> Klartext)
 LIGEN = {
+    # Top-5 (sehr scharf bepreist):
     "PL":  "Premier League",
     "BL1": "Bundesliga",
     "PD":  "La Liga",
     "SA":  "Serie A",
     "FL1": "Ligue 1",
+    # Weichere Ligen (weniger scharf bepreist -> mögliche Edge-Quellen):
+    "ELC": "Championship (England 2. Liga)",
+    "DED": "Eredivisie (Niederlande)",
+    "PPL": "Primeira Liga (Portugal)",
+    "BSA": "Brasileirao (Brasilien)",
 }
 
 
