@@ -263,12 +263,13 @@ async def status():
     }
 
 @app.get("/import-historie")
-async def import_historie(secret: str = "", seasons: str = "2023,2024,2025"):
-    """Weg B: Historien-Import in Supabase. seasons per URL wählbar, z.B. ?seasons=2025"""
+async def import_historie(secret: str = "", seasons: str = "2023,2024,2025", ligen: str = ""):
+    """Weg B: Historien-Import. seasons + ligen per URL wählbar, z.B. ?seasons=2023,2024,2025&ligen=ELC,DED"""
     if secret != os.getenv("IMPORT_SECRET", ""):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     saison_liste = [s.strip() for s in seasons.split(",") if s.strip()]
-    return await importiere(seasons=saison_liste)
+    liga_liste = [l.strip() for l in ligen.split(",") if l.strip()] or None
+    return await importiere(seasons=saison_liste, ligen=liga_liste)
 
 @app.get("/prognose")
 async def prognose_endpoint(home: str, away: str, league: str = "PL",
