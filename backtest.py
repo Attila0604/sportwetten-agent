@@ -27,13 +27,22 @@ def _outcome(hg: int, ag: int) -> str:
 
 
 async def _lade_matches(client, league):
+    """Lädt ALLE Spiele einer Liga – mit Pagination (Supabase liefert max. 1000/Anfrage)."""
     url = f"{SUPABASE_URL}/rest/v1/matches"
-    params = {"select": "season,match_date,home,away,home_goals,away_goals",
-              "league": f"eq.{league}", "limit": "10000"}
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-    r = await client.get(url, params=params, headers=headers, timeout=60)
-    r.raise_for_status()
-    return r.json()
+    alle, offset = [], 0
+    while True:
+        params = {"select": "season,match_date,home,away,home_goals,away_goals",
+                  "league": f"eq.{league}", "order": "id",
+                  "limit": "1000", "offset": str(offset)}
+        r = await client.get(url, params=params, headers=headers, timeout=60)
+        r.raise_for_status()
+        batch = r.json()
+        alle.extend(batch)
+        if len(batch) < 1000:
+            break
+        offset += 1000
+    return alle
 
 
 def _metriken(vorhersagen: list) -> dict:
